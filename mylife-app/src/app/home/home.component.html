@@ -1,1 +1,16 @@
-<p>home works!</p>
+<div class="home">
+  <header class="home__header">
+    <p class="greeting">Good morning ✦</p>
+    <p class="date">{{ today | date:'EEEE, d MMMM y' }}</p>
+  </header>
+
+  <div class="home__grid">
+    @for (card of cards; track card.route) {
+      <a class="workspace-card" [routerLink]="card.route">
+        <span class="workspace-card__icon">{{ card.icon }}</span>
+        <span class="workspace-card__title">{{ card.title }}</span>
+        <span class="workspace-card__subtitle">{{ card.subtitle }}</span>
+      </a>
+    }
+  </div>
+</div>
