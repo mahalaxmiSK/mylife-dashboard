@@ -24,7 +24,7 @@ describe('AuthGuard', () => {
 
   it('should allow when owner email matches', (done) => {
     authService.getUser.and.returnValue(of({
-      clientPrincipal: { userId: '1', userDetails: 'owner@example.com', identityProvider: 'github' }
+      clientPrincipal: { userId: '1', userDetails: 'YOUR_EMAIL@example.com', identityProvider: 'github' }
     }));
     guard.canActivate().subscribe(result => {
       expect(result).toBeTrue();
