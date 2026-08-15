@@ -1,1 +1,21 @@
-<p>feel-alive works!</p>
+<div class="page">
+  <a class="page__back" routerLink="/">&larr; back</a>
+  <h1 class="page__title">Feel Alive</h1>
+
+  <div class="add-row">
+    <input class="input" [(ngModel)]="draft" (keyup.enter)="add()"
+           placeholder="Something that makes you feel alive..." />
+    <button class="btn btn--primary" (click)="add()">Add</button>
+  </div>
+
+  <p class="loading" *ngIf="loading">Loading...</p>
+
+  <div class="list" *ngIf="!loading">
+    <div class="list-item" *ngFor="let item of items" [class.list-item--done]="item.done">
+      <input type="checkbox" [checked]="item.done" (change)="toggle(item)" />
+      <span class="list-item__text">{{ item.text }}</span>
+      <button class="icon-btn" (click)="remove(item)" aria-label="Delete">&times;</button>
+    </div>
+    <p class="empty" *ngIf="!items.length">Nothing here yet.</p>
+  </div>
+</div>

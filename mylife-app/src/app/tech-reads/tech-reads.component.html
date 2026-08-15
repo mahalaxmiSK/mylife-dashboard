@@ -1,1 +1,29 @@
-<p>tech-reads works!</p>
+<div class="page">
+  <a class="page__back" routerLink="/">&larr; back</a>
+  <h1 class="page__title">Tech Reads</h1>
+
+  <div class="add-row">
+    <input class="input" [(ngModel)]="draft" (keyup.enter)="add()"
+           placeholder="Topic to learn..." />
+    <button class="btn btn--primary" (click)="add()">Add</button>
+  </div>
+
+  <p class="loading" *ngIf="loading">Loading...</p>
+
+  <div class="list" *ngIf="!loading">
+    <div class="topic" *ngFor="let topic of topics">
+      <div class="row">
+        <span class="topic__title">{{ topic.title }}</span>
+        <button class="icon-btn" (click)="remove(topic)" aria-label="Delete">&times;</button>
+      </div>
+      <div class="row">
+        <input type="range" min="0" max="100" step="5" class="topic__range"
+               [value]="topic.progress_pct"
+               (input)="setProgress(topic, $any($event.target).value)" />
+        <span class="topic__pct">{{ topic.progress_pct }}%</span>
+      </div>
+      <span class="label">{{ statusLabel(topic.status) }}</span>
+    </div>
+    <p class="empty" *ngIf="!topics.length">No topics yet.</p>
+  </div>
+</div>

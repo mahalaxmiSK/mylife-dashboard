@@ -1,1 +1,35 @@
-<p>habits works!</p>
+<div class="page">
+  <a class="page__back" routerLink="/">&larr; back</a>
+  <h1 class="page__title">Habits</h1>
+
+  <div class="add-row">
+    <input class="input" [(ngModel)]="draft" (keyup.enter)="add()"
+           placeholder="New habit..." />
+    <button class="btn btn--primary" (click)="add()">Add</button>
+  </div>
+
+  <p class="loading" *ngIf="loading">Loading...</p>
+
+  <div class="grid" *ngIf="!loading && habits.length">
+    <div class="grid__head">
+      <span></span>
+      <span class="grid__day-label" *ngFor="let day of days">{{ dayLabel(day) }}</span>
+      <span></span>
+    </div>
+
+    <div class="grid__row" *ngFor="let habit of habits">
+      <span class="grid__name">
+        {{ habit.name }}
+        <em class="grid__streak" *ngIf="streak(habit.id) > 1">🔥 {{ streak(habit.id) }}</em>
+      </span>
+      <button class="dot" *ngFor="let day of days"
+              [class.dot--on]="isLogged(habit.id, day)"
+              [class.dot--today]="day === today()"
+              (click)="toggle(habit.id, day)"
+              [attr.aria-label]="habit.name + ' on ' + day"></button>
+      <button class="icon-btn" (click)="remove(habit)" aria-label="Delete">&times;</button>
+    </div>
+  </div>
+
+  <p class="empty" *ngIf="!loading && !habits.length">No habits yet.</p>
+</div>

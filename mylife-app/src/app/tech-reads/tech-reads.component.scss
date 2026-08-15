@@ -1,0 +1,13 @@
+.topic {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.topic__title { flex: 1; font-size: 13px; font-weight: 600; }
+.topic__range { flex: 1; accent-color: var(--text); }
+.topic__pct { font-size: 12px; color: var(--text-muted); min-width: 36px; text-align: right; }

@@ -1,1 +1,43 @@
-<p>routines works!</p>
+<div class="page">
+  <a class="page__back" routerLink="/">&larr; back</a>
+  <h1 class="page__title">Routines</h1>
+
+  <p class="loading" *ngIf="loading">Loading...</p>
+
+  <ng-container *ngIf="!loading">
+    <div class="chip-row">
+      <button class="chip" *ngFor="let template of templates"
+              [class.chip--active]="active?.id === template.id"
+              (click)="open(template)">{{ template.title }}</button>
+    </div>
+
+    <div class="add-row">
+      <select class="input select" [(ngModel)]="newTemplateType">
+        <option *ngFor="let type of dayTypes" [value]="type">{{ type }}</option>
+      </select>
+      <input class="input" [(ngModel)]="newTemplateTitle" (keyup.enter)="createTemplate()"
+             placeholder="New routine name..." />
+      <button class="btn btn--primary" (click)="createTemplate()">Add</button>
+    </div>
+
+    <ng-container *ngIf="active">
+      <div class="add-row">
+        <input class="input" [(ngModel)]="draftItem" (keyup.enter)="addItem()"
+               placeholder="Add a step..." />
+        <button class="btn btn--ghost" (click)="addItem()">+</button>
+      </div>
+
+      <div class="list">
+        <div class="list-item" *ngFor="let item of items"
+             [class.list-item--done]="checked.has(item.id)">
+          <input type="checkbox" [checked]="checked.has(item.id)" (change)="toggle(item)" />
+          <span class="list-item__text">{{ item.text }}</span>
+          <button class="icon-btn" (click)="removeItem(item)" aria-label="Delete">&times;</button>
+        </div>
+        <p class="empty" *ngIf="!items.length">No steps yet.</p>
+      </div>
+    </ng-container>
+
+    <p class="empty" *ngIf="!templates.length">No routines yet. Create one above.</p>
+  </ng-container>
+</div>

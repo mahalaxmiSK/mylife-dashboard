@@ -1,1 +1,56 @@
-<p>challenges works!</p>
+<div class="page">
+  <a class="page__back" routerLink="/">&larr; back</a>
+  <h1 class="page__title">Challenges</h1>
+
+  <div class="add-row">
+    <input class="input" [(ngModel)]="newName" (keyup.enter)="create()"
+           placeholder="New challenge..." />
+    <input class="input days" type="number" min="1" [(ngModel)]="newDuration"
+           aria-label="Duration in days" />
+    <button class="btn btn--primary" (click)="create()">Add</button>
+  </div>
+
+  <p class="loading" *ngIf="loading">Loading...</p>
+
+  <ng-container *ngIf="!loading">
+    <div class="chip-row">
+      <button class="chip" *ngFor="let challenge of challenges"
+              [class.chip--active]="active?.id === challenge.id"
+              (click)="open(challenge)">{{ challenge.name }}</button>
+    </div>
+
+    <ng-container *ngIf="active">
+      <div class="header-card">
+        <div class="row">
+          <span class="header-card__name">{{ active.name }}</span>
+          <button class="icon-btn" (click)="remove(active)" aria-label="Delete">&times;</button>
+        </div>
+        <span class="label" *ngIf="dayNumber(active) as day">
+          Day {{ day }}<ng-container *ngIf="active.duration_days"> of {{ active.duration_days }}</ng-container>
+        </span>
+        <select class="input select" [ngModel]="active.status"
+                (ngModelChange)="setStatus(active, $event)">
+          <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+
+      <div class="add-row">
+        <input class="input" [(ngModel)]="draftRule" (keyup.enter)="addRule()"
+               placeholder="Add a rule..." />
+        <button class="btn btn--ghost" (click)="addRule()">+</button>
+      </div>
+
+      <span class="label">Today</span>
+      <div class="list">
+        <div class="list-item" *ngFor="let rule of rules"
+             [class.list-item--done]="isDone(rule.id)">
+          <input type="checkbox" [checked]="isDone(rule.id)" (change)="toggleRule(rule)" />
+          <span class="list-item__text">{{ rule.text }}</span>
+        </div>
+        <p class="empty" *ngIf="!rules.length">No rules yet.</p>
+      </div>
+    </ng-container>
+
+    <p class="empty" *ngIf="!challenges.length">No challenges yet.</p>
+  </ng-container>
+</div>

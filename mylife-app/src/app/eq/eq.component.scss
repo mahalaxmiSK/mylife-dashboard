@@ -1,0 +1,16 @@
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 24px 0 12px;
+}
+
+.note { font-style: normal; color: var(--text-muted); }
+
+.stamp { font-size: 11px; color: var(--text-muted); }

@@ -1,0 +1,35 @@
+import { Injectable, inject } from '@angular/core';
+import { Observable, map } from 'rxjs';
+import { LocalDbService } from './local-db.service';
+import { TechTopic } from './models';
+
+@Injectable({ providedIn: 'root' })
+export class TechReadsService {
+  private db = inject(LocalDbService);
+
+  list(): Observable<TechTopic[]> {
+    return this.db.all<TechTopic>('tech_topics').pipe(
+      map(topics => topics.sort((a, b) =>
+        (b.created_at ?? '').localeCompare(a.created_at ?? '')))
+    );
+  }
+
+  create(title: string): Observable<TechTopic> {
+    return this.db.insert<TechTopic>('tech_topics', {
+      title,
+      status: 'not_started',
+      progress_pct: 0
+    });
+  }
+
+  setProgress(id: string, progressPct: number): Observable<TechTopic> {
+    const pct = Math.min(100, Math.max(0, progressPct));
+    const status: TechTopic['status'] =
+      pct === 0 ? 'not_started' : pct === 100 ? 'done' : 'in_progress';
+    return this.db.update<TechTopic>('tech_topics', id, { progress_pct: pct, status });
+  }
+
+  remove(id: string): Observable<void> {
+    return this.db.remove('tech_topics', id);
+  }
+}
