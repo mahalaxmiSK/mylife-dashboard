@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ToastService } from '../core/services/toast.service';
+import { forkJoin } from 'rxjs';
 import { RoutinesService } from '../core/services/routines.service';
-import { RoutineItem, RoutineTemplate } from '../core/services/models';
+import { RoutineItem, RoutineTemplate, today } from '../core/services/models';
 
 @Component({
   selector: 'app-routines',
@@ -29,7 +30,7 @@ export class RoutinesComponent implements OnInit {
   draftItem = '';
 
   loading = true;
-  /** Ticked items are session-only: the schema stores the template, not daily runs. */
+  /** Steps ticked today, loaded alongside the template's steps. */
   checked = new Set<string>();
 
   ngOnInit(): void {
@@ -43,11 +44,25 @@ export class RoutinesComponent implements OnInit {
     });
   }
 
+  /**
+   * Steps and today's ticks are fetched together so the list never renders
+   * briefly unticked before the ticks arrive.
+   */
   open(template: RoutineTemplate): void {
     this.active = template;
     this.items = [];
     this.checked.clear();
-    this.service.items(template.id).subscribe(items => this.items = items);
+
+    forkJoin({
+      items: this.service.items(template.id),
+      ticked: this.service.tickedOn(today())
+    }).subscribe({
+      next: ({ items, ticked }) => {
+        this.checked = new Set(ticked);
+        this.items = items;
+      },
+      error: () => this.toast.show('Could not load that routine')
+    });
   }
 
   createTemplate(): void {
@@ -71,6 +86,7 @@ export class RoutinesComponent implements OnInit {
   removeItem(item: RoutineItem): void {
     const index = this.items.indexOf(item);
     this.items.splice(index, 1);
+    this.checked.delete(item.id);
     this.service.removeItem(item.id).subscribe({
       error: () => {
         this.items.splice(index, 0, item);
@@ -79,8 +95,24 @@ export class RoutinesComponent implements OnInit {
     });
   }
 
+  /** Optimistic: the tick lands immediately and rolls back if the write fails. */
   toggle(item: RoutineItem): void {
-    if (this.checked.has(item.id)) this.checked.delete(item.id);
+    const wasChecked = this.checked.has(item.id);
+    const date = today();
+
+    if (wasChecked) this.checked.delete(item.id);
     else this.checked.add(item.id);
+
+    const write = wasChecked
+      ? this.service.untick(item.id, date)
+      : this.service.tick(item.id, date);
+
+    write.subscribe({
+      error: () => {
+        if (wasChecked) this.checked.add(item.id);
+        else this.checked.delete(item.id);
+        this.toast.show('Could not save that step');
+      }
+    });
   }
 }

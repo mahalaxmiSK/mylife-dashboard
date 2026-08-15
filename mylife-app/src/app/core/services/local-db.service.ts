@@ -4,6 +4,7 @@ import { Observable, from } from 'rxjs';
 export const STORES = [
   'routines_templates',
   'routines_items',
+  'routine_item_logs',
   'eq_checkins',
   'feel_alive_items',
   'tech_topics',
@@ -17,7 +18,9 @@ export const STORES = [
 export type StoreName = (typeof STORES)[number];
 
 const DB_NAME = 'mylife';
-const DB_VERSION = 1;
+// v2 added routine_item_logs. The upgrade handler creates whatever is missing,
+// so existing v1 databases gain the store without losing their contents.
+const DB_VERSION = 2;
 
 interface Row {
   id: string;
@@ -92,6 +95,15 @@ export class LocalDbService {
     return from(
       this.run(store, 'readwrite', s => s.add(row)).then(() => row)
     );
+  }
+
+  /**
+   * Writes a row under a caller-chosen id, replacing any row already there.
+   * Lets callers derive an id from the data itself, which makes repeat writes
+   * idempotent and avoids the read-modify-write race a generated id would need.
+   */
+  put<T extends Row>(store: StoreName, row: T): Observable<T> {
+    return from(this.run(store, 'readwrite', s => s.put(row)).then(() => row));
   }
 
   update<T extends Row>(store: StoreName, id: string, patch: Partial<T>): Observable<T> {

@@ -50,6 +50,12 @@ export interface RoutineItem extends BaseRow {
   position: number;
 }
 
+/** One tick of a routine step on one calendar day. */
+export interface RoutineItemLog extends BaseRow {
+  item_id: string;
+  logged_date: string;
+}
+
 export interface Challenge extends BaseRow {
   name: string;
   status: 'upcoming' | 'active' | 'completed' | 'abandoned';

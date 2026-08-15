@@ -150,8 +150,7 @@ row.*
 
 **REQ-ROUT-02** — Template steps are reorderable, not just add/delete.
 
-**REQ-ROUT-03** — Ticked steps persist per calendar day. *Currently lost on
-reload — the schema has nowhere to record them.*
+**REQ-ROUT-03** — Ticked steps persist per calendar day. *Done.*
 
 ### 6.2 EQ Check-in
 
@@ -262,8 +261,8 @@ not UTC.
 | BUG-03 | EQ emotion buttons did not match the suggestion data, so no suggestion ever appeared | fixed |
 | BUG-04 | Habit streaks capped at 7 by the visible window | fixed |
 | BUG-05 | Error toasts existed but were never triggered | fixed |
-| BUG-06 | Dead `api.service.ts` / `auth.service.ts` left in the repo after a zip-over-extract | open |
-| BUG-07 | Routine ticks lost on reload | open — REQ-ROUT-03 |
+| BUG-06 | Dead `api.service.ts` / `auth.service.ts` left in the repo after a zip-over-extract | fixed |
+| BUG-07 | Routine ticks lost on reload | fixed |
 | BUG-08 | Home advertises a spin wheel that does not exist | open — REQ-HOME-02 |
 
 ---
