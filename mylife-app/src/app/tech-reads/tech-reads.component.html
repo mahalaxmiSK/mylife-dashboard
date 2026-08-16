@@ -3,9 +3,17 @@
   <h1 class="page__title">Tech Reads</h1>
 
   <div class="add-row">
-    <input class="input" [(ngModel)]="draft" (keyup.enter)="add()"
+    <label class="visually-hidden" for="new-topic">Topic to learn</label>
+    <input class="input" id="new-topic" [(ngModel)]="draft" (keyup.enter)="add()"
            placeholder="Topic to learn..." />
     <button class="btn btn--primary" (click)="add()">Add</button>
+  </div>
+
+  <div class="pick" *ngIf="candidates.length">
+    <button class="btn btn--ghost" (click)="pickRandom()">Pick random</button>
+    <p class="pick__result" role="status" aria-live="polite">
+      <ng-container *ngIf="picked">{{ picked.title }}</ng-container>
+    </p>
   </div>
 
   <p class="loading" *ngIf="loading">Loading...</p>
@@ -13,11 +21,18 @@
   <div class="list" *ngIf="!loading">
     <div class="topic" *ngFor="let topic of topics">
       <div class="row">
+        <span class="topic__dot" [style.opacity]="dotWeight(topic)"
+              [class.topic__dot--done]="topic.status === 'done'" aria-hidden="true"></span>
         <span class="topic__title">{{ topic.title }}</span>
-        <button class="icon-btn" (click)="remove(topic)" aria-label="Delete">&times;</button>
+        <button class="icon-btn" (click)="remove(topic)"
+                attr.aria-label="Delete {{ topic.title }}">&times;</button>
       </div>
       <div class="row">
+        <label class="visually-hidden" [attr.for]="'progress-' + topic.id">
+          Progress on {{ topic.title }}
+        </label>
         <input type="range" min="0" max="100" step="5" class="topic__range"
+               [id]="'progress-' + topic.id"
                [value]="topic.progress_pct"
                (input)="setProgress(topic, $any($event.target).value)" />
         <span class="topic__pct">{{ topic.progress_pct }}%</span>

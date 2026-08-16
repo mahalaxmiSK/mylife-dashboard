@@ -199,9 +199,10 @@ all of it is. Honours prefers-reduced-motion.*
 ### 6.4 Tech Reads
 
 **REQ-TECH-01** — "Pick random" selects among not-started and in-progress
-topics. *Missing.*
+topics. *Done.*
 
-**REQ-TECH-02** — Status shown as a dot whose weight reflects progress.
+**REQ-TECH-02** — Status shown as a dot whose weight reflects progress. *Done —
+a filled dot that gains weight with progress, hollow once finished.*
 
 ### 6.5 Habits
 

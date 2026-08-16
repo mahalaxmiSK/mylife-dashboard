@@ -20,9 +20,34 @@ export class TechReadsComponent implements OnInit {
   topics: TechTopic[] = [];
   draft = '';
   loading = true;
+  picked: TechTopic | null = null;
 
   ngOnInit(): void {
     this.load();
+  }
+
+  /**
+   * REQ-TECH-01: what a random pick chooses between. A finished topic is not a
+   * candidate — the point is to find the next thing to sit down with.
+   */
+  get candidates(): TechTopic[] {
+    return this.topics.filter(t => t.status !== 'done');
+  }
+
+  pickRandom(): void {
+    const candidates = this.candidates;
+    this.picked = candidates.length
+      ? candidates[Math.floor(Math.random() * candidates.length)]
+      : null;
+  }
+
+  /**
+   * REQ-TECH-02: how heavy the status dot renders, from progress. Never quite
+   * zero, so an untouched topic is still visibly present rather than blank.
+   */
+  dotWeight(topic: TechTopic): number {
+    const pct = Math.min(100, Math.max(0, topic.progress_pct)) / 100;
+    return 0.25 + pct * 0.75;
   }
 
   private load(): void {
@@ -55,6 +80,7 @@ export class TechReadsComponent implements OnInit {
   remove(topic: TechTopic): void {
     const index = this.topics.indexOf(topic);
     this.topics.splice(index, 1);
+    if (this.picked === topic) this.picked = null;
     this.service.remove(topic.id).subscribe({
       error: () => {
         this.topics.splice(index, 0, topic);
