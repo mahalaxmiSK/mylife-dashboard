@@ -1,6 +1,6 @@
 # MyLife Dashboard — Requirements Specification
 
-**Version:** 2.0
+**Version:** 2.1
 **Date:** 16 August 2026
 **Live:** https://mahalaxmisk.github.io/mylife-dashboard/
 **Supersedes:** `docs/superpowers/specs/2026-05-11-mylife-dashboard-design.md`
@@ -29,6 +29,8 @@ depleted must not feel like another demand.
 | Storage | Browser IndexedDB — **local to one device** |
 | Auth | None |
 | Sync | None |
+| Tests | 21 passing, headless Chrome |
+| Owner | A .NET developer learning Angular — relevant to REQ-SEED-05 |
 
 Six modules exist and work. Data never leaves the device it was typed on.
 
@@ -38,11 +40,12 @@ Six modules exist and work. Data never leaves the device it was typed on.
 
 | Rank | Item | Status |
 | --- | --- | --- |
-| **P1** | Cross-device sync with login (§5) | in progress |
-| P2 | Restore missing module behaviour (§6) | not started |
-| P3 | Installable on phone home screen (§7.1) | not started |
-| P4 | Cross-module intelligence (§7.2) | not started |
-| P5 | Weekly review (§7.3) | not started |
+| **P1** | Cross-device sync with login (§5) | blocked — needs an access token (§5.5) |
+| **P2** | Restore missing module behaviour (§6) | in progress — 2 of 9 done |
+| **P3** | Starter content and personalisation (§7) | not started |
+| P4 | Installable on phone home screen (§8.1) | not started |
+| P5 | Cross-module intelligence (§8.2) | not started |
+| P6 | Weekly review (§8.3) | not started |
 
 ---
 
@@ -108,7 +111,7 @@ remote data.
 ### 5.3 Explicit trade-offs
 
 - **Offline stops working.** The app becomes network-dependent. Accepted for
-  now; §7.1 revisits it.
+  now; §8.1 revisits it.
 - **Privacy weakens.** Check-ins move from your device to a hosting provider's
   servers. Encrypted in transit and at rest, invisible to other users, but the
   provider technically holds the keys. This is strictly less private than local
@@ -128,12 +131,23 @@ remote data.
 
 ### 5.5 Setup this requires
 
-One-time, and must be done by the account owner:
+The owner wants no manual console work. All of it can be driven through the
+provider's management API instead, so the whole of this reduces to one hand-off:
 
-1. Run the schema SQL in the database console
-2. Create the owner's user, with email confirmation set to automatic
-3. Disable new signups
-4. Paste the project's publishable key into the environment files
+1. The owner generates a **personal access token** in the provider dashboard and
+   supplies it once. This is the only step that cannot be automated — issuing a
+   credential is the owner's to do.
+2. Everything after that is scripted: create the project, apply the schema and
+   row-level security policies, create the owner's user, disable new signups,
+   and write the publishable key into the environment files.
+
+**REQ-SYNC-09** — Setting up sync must not require the owner to click through a
+database console. Given a token, the rest is automated.
+
+*Open question on REQ-SYNC-02: creating the account means setting a password,
+which the assistant should not do. A magic-link (email one-time code) login
+satisfies "no anonymous access" without anyone handling a password, and is
+easier on a phone. Decide before building the login screen.*
 
 ---
 
@@ -145,10 +159,11 @@ against that design, not new ideas.
 ### 6.1 Day Routines
 
 **REQ-ROUT-01** — Present four day-type tiles: Lazy 😴, Reset 🔄, Creative 🎨,
-Focused 🎯. Selecting one loads its template below. *Currently a generic chip
-row.*
+Focused 🎯. Selecting one loads its template below. *Done.*
 
-**REQ-ROUT-02** — Template steps are reorderable, not just add/delete.
+**REQ-ROUT-02** — Template steps are reorderable, not just add/delete. *Done —
+up/down buttons rather than drag, so the control stays keyboard-reachable and
+usable one-handed.*
 
 **REQ-ROUT-03** — Ticked steps persist per calendar day. *Done.*
 
@@ -211,7 +226,44 @@ glyphs.
 
 ---
 
-## 7. Later
+## 7. P3 — Starter content and personalisation
+
+An empty module gives no clue what belongs in it, and "add your first habit" is
+a demand at the moment the user is least able to meet one. Every module should
+arrive holding something worth keeping, drawn from real published guidance and
+tuned to this user rather than generic filler.
+
+**REQ-SEED-01** — Each of the four day types arrives with a real routine the
+first time it is opened — an ordered set of steps grounded in published guidance
+on rest, reset, creative and focused days, not placeholder text.
+
+**REQ-SEED-02** — Seeded rows are ordinary user data. They can be edited,
+reordered and deleted exactly like hand-typed ones.
+
+**REQ-SEED-03** — Seeding happens per module, on first use of that module, and
+never again. A module the user has deliberately emptied stays empty — content
+must not reappear on the next visit.
+
+**REQ-SEED-04** — The EQ emotion list widens well beyond the current ten, and
+each emotion carries enough suggestions that a third visit does not simply
+repeat the first.
+
+**REQ-SEED-05** — Tech Reads is seeded for this user's actual stack, .NET and
+Angular, rather than a generic engineering reading list. The user is a .NET
+developer learning Angular, and the module is worthless if it ignores that.
+
+**REQ-SEED-06** — Feel Alive, Habits and Challenges arrive with starters framed
+as examples rather than prescriptions, consistent with REQ-GEN-05.
+
+**REQ-SEED-07** — Seed content is bundled into the build, not fetched at
+runtime. It must survive with no network and add no startup request.
+
+**REQ-SEED-08** — Sources for the routine and emotion content are recorded, so
+the claims behind them can be checked later rather than taken on trust.
+
+---
+
+## 8. Later
 
 **REQ-FUT-01 — Installable.** Web manifest and service worker, so it launches
 from the phone home screen and works offline. Likely the single biggest factor
@@ -231,7 +283,7 @@ the privacy given up in §5.3. Cost: a lost passphrase means unrecoverable data.
 
 ---
 
-## 8. Out of scope
+## 9. Out of scope
 
 - Multi-user, sharing, collaboration
 - Notifications or reminders — this is a place you choose to go
@@ -241,7 +293,7 @@ the privacy given up in §5.3. Cost: a lost passphrase means unrecoverable data.
 
 ---
 
-## 9. Non-functional
+## 10. Non-functional
 
 **REQ-NFR-01** — Hosting stays free.
 **REQ-NFR-02** — Interactive within 2s on a mid-range phone over 4G.
@@ -252,7 +304,7 @@ not UTC.
 
 ---
 
-## 10. Known defects
+## 11. Known defects
 
 | ID | Issue | Status |
 | --- | --- | --- |
@@ -267,11 +319,19 @@ not UTC.
 
 ---
 
-## 11. Verification status
+## 12. Verification status
 
 Verified: storage logic against a real IndexedDB implementation (CRUD, cascade
 deletes, streak edge cases, export/import round trip); production build from a
 clean clone; built output served over HTTP.
 
-Not verified: unit tests have never run — no browser available in the build
-sandbox. The assembled UI has never been clicked through by the author.
+**The unit tests now run** — 21 passing against headless Chrome, up from the 7
+that had never once been executed. Routine ticks were additionally confirmed by
+hand in a browser: ticked, reloaded, still ticked.
+
+The IndexedDB v1 → v2 upgrade was verified against a genuine v1 database seeded
+with a row: the row survived and the new store appeared. This matters because
+the owner has real history in v1 databases on more than one device.
+
+Still not verified: the six data services other than routines have no tests at
+all, and most of the assembled UI has never been clicked through.
