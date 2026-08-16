@@ -207,7 +207,8 @@ a filled dot that gains weight with progress, hollow once finished.*
 ### 6.5 Habits
 
 **REQ-HABIT-01** — Today's list leads, with tap-to-complete and per-habit
-streak. The weekly grid sits **below** it. *Currently only the grid exists.*
+streak. The weekly grid sits **below** it. *Done — the count beside Today is a
+count, not a target, so there is nothing to fall short of.*
 
 **REQ-HABIT-02** — Streaks count consecutive days across all history, and stay
 alive when today is not yet ticked but yesterday was. *Done.*

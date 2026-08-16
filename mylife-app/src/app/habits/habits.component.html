@@ -3,33 +3,53 @@
   <h1 class="page__title">Habits</h1>
 
   <div class="add-row">
-    <input class="input" [(ngModel)]="draft" (keyup.enter)="add()"
+    <label class="visually-hidden" for="new-habit">New habit</label>
+    <input class="input" id="new-habit" [(ngModel)]="draft" (keyup.enter)="add()"
            placeholder="New habit..." />
     <button class="btn btn--primary" (click)="add()">Add</button>
   </div>
 
   <p class="loading" *ngIf="loading">Loading...</p>
 
-  <div class="grid" *ngIf="!loading && habits.length">
-    <div class="grid__head">
-      <span></span>
-      <span class="grid__day-label" *ngFor="let day of days">{{ dayLabel(day) }}</span>
-      <span></span>
+  <ng-container *ngIf="!loading && habits.length">
+    <!-- REQ-HABIT-01: today leads; the week sits underneath it. -->
+    <div class="today__head">
+      <span class="label">Today</span>
+      <span class="today__count">{{ doneTodayCount }} of {{ habits.length }}</span>
     </div>
 
-    <div class="grid__row" *ngFor="let habit of habits">
-      <span class="grid__name">
-        {{ habit.name }}
-        <em class="grid__streak" *ngIf="streak(habit.id) > 1">🔥 {{ streak(habit.id) }}</em>
-      </span>
-      <button class="dot" *ngFor="let day of days"
-              [class.dot--on]="isLogged(habit.id, day)"
-              [class.dot--today]="day === today()"
-              (click)="toggle(habit.id, day)"
-              [attr.aria-label]="habit.name + ' on ' + day"></button>
-      <button class="icon-btn" (click)="remove(habit)" aria-label="Delete">&times;</button>
+    <div class="list today">
+      <button class="today__item" *ngFor="let habit of habits"
+              [class.today__item--done]="isDoneToday(habit)"
+              [attr.aria-pressed]="isDoneToday(habit)"
+              (click)="toggleToday(habit)">
+        <span class="today__check" aria-hidden="true">{{ isDoneToday(habit) ? '✓' : '' }}</span>
+        <span class="today__name">{{ habit.name }}</span>
+        <em class="today__streak" *ngIf="streak(habit.id) > 1">{{ streak(habit.id) }} days</em>
+      </button>
     </div>
-  </div>
+
+    <span class="label">This week</span>
+    <div class="grid">
+      <div class="grid__head">
+        <span></span>
+        <span class="grid__day-label" *ngFor="let day of days">{{ dayLabel(day) }}</span>
+        <span></span>
+      </div>
+
+      <div class="grid__row" *ngFor="let habit of habits">
+        <span class="grid__name">{{ habit.name }}</span>
+        <button class="dot" *ngFor="let day of days"
+                [class.dot--on]="isLogged(habit.id, day)"
+                [class.dot--today]="day === today()"
+                (click)="toggle(habit.id, day)"
+                [attr.aria-label]="habit.name + ' on ' + day"
+                [attr.aria-pressed]="isLogged(habit.id, day)"></button>
+        <button class="icon-btn" (click)="remove(habit)"
+                attr.aria-label="Delete {{ habit.name }}">&times;</button>
+      </div>
+    </div>
+  </ng-container>
 
   <p class="empty" *ngIf="!loading && !habits.length">No habits yet.</p>
 </div>

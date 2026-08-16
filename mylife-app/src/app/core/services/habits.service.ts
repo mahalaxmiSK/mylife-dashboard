@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, switchMap } from 'rxjs';
+import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { LocalDbService } from './local-db.service';
 import { Habit, HabitLog } from './models';
 
@@ -35,19 +35,37 @@ export class HabitsService {
     return this.db.all<HabitLog>('habit_logs');
   }
 
-  toggle(habitId: string, loggedDate: string): Observable<{ logged: boolean }> {
-    return this.db.all<HabitLog>('habit_logs').pipe(
-      switchMap(rows => {
-        const existing = rows.find(
-          r => r.habit_id === habitId && r.logged_date === loggedDate);
+  /**
+   * A log is identified by its habit and day rather than a generated id, so
+   * marking a day is one atomic write. The previous read-then-write pair let
+   * two quick taps interleave: both reads saw no row, and one tap was lost.
+   */
+  private static logId(habitId: string, loggedDate: string): string {
+    return `${habitId}:${loggedDate}`;
+  }
 
-        if (existing) {
-          return this.db.remove('habit_logs', existing.id).pipe(
-            map(() => ({ logged: false })));
-        }
-        return this.db
-          .insert<HabitLog>('habit_logs', { habit_id: habitId, logged_date: loggedDate })
-          .pipe(map(() => ({ logged: true })));
+  setLogged(habitId: string, loggedDate: string, logged: boolean): Observable<void> {
+    const id = HabitsService.logId(habitId, loggedDate);
+
+    if (logged) {
+      return this.db.put<HabitLog>('habit_logs', {
+        id,
+        habit_id: habitId,
+        logged_date: loggedDate,
+        created_at: new Date().toISOString()
+      }).pipe(map(() => undefined));
+    }
+
+    // Rows written before ids were derived still carry a generated one, so
+    // clearing a day has to sweep by field as well as by key.
+    return this.db.remove('habit_logs', id).pipe(
+      switchMap(() => this.db.all<HabitLog>('habit_logs')),
+      switchMap(rows => {
+        const strays = rows.filter(
+          r => r.habit_id === habitId && r.logged_date === loggedDate);
+        if (!strays.length) return of(undefined);
+        return forkJoin(strays.map(r => this.db.remove('habit_logs', r.id)))
+          .pipe(map(() => undefined));
       })
     );
   }

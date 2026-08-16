@@ -70,12 +70,25 @@ export class HabitsComponent implements OnInit {
     // Optimistic flip, reverted if the request fails.
     if (wasLogged) this.logged.delete(key); else this.logged.add(key);
 
-    this.service.toggle(habitId, date).subscribe({
+    this.service.setLogged(habitId, date, !wasLogged).subscribe({
       error: () => {
         if (wasLogged) this.logged.add(key); else this.logged.delete(key);
         this.toast.show('Could not save that');
       }
     });
+  }
+
+  /** REQ-HABIT-01: today leads, so this is the list the page opens on. */
+  toggleToday(habit: Habit): void {
+    this.toggle(habit.id, today());
+  }
+
+  isDoneToday(habit: Habit): boolean {
+    return this.isLogged(habit.id, today());
+  }
+
+  get doneTodayCount(): number {
+    return this.habits.filter(h => this.isDoneToday(h)).length;
   }
 
   add(): void {
