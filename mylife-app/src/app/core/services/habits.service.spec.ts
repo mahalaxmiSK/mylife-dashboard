@@ -1,12 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { HabitsService } from './habits.service';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
+import { InMemoryDbService } from './testing/in-memory-db.service';
 import { Habit, HabitLog } from './models';
 
 describe('HabitsService', () => {
   let service: HabitsService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
   let habit: Habit;
 
   async function loggedDates(habitId: string): Promise<string[]> {
@@ -15,10 +16,12 @@ describe('HabitsService', () => {
   }
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{ provide: DbService, useClass: InMemoryDbService }]
+    });
     service = TestBed.inject(HabitsService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
     habit = await firstValueFrom(service.create('Walk'));
   });
 

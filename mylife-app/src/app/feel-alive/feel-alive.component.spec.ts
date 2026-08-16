@@ -3,12 +3,13 @@ import { provideRouter } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { FeelAliveComponent, nextRotation } from './feel-alive.component';
 import { FeelAliveService } from '../core/services/feel-alive.service';
-import { LocalDbService } from '../core/services/local-db.service';
+import { DbService } from '../core/services/db.service';
+import { InMemoryDbService } from '../core/services/testing/in-memory-db.service';
 import { SeedService } from '../core/services/seed.service';
 
 describe('FeelAliveComponent', () => {
   let service: FeelAliveService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
 
   /**
    * Which segment ends up under the pointer, derived independently of the
@@ -38,11 +39,11 @@ describe('FeelAliveComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FeelAliveComponent],
-      providers: [provideRouter([])]
+      providers: [provideRouter([]), { provide: DbService, useClass: InMemoryDbService }]
     }).compileComponents();
     service = TestBed.inject(FeelAliveService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
     // Claim the seed slot with an empty seed, so these tests see only their
     // own fixture rather than the starter list as well.
     await firstValueFrom(TestBed.inject(SeedService).ensureSeeded('feel-alive', () => of(undefined)));

@@ -14,20 +14,32 @@
     }
   </div>
 
+  <!-- REQ-SYNC-06: offered once, only while there is something to move. -->
+  @if (offerMigration) {
+    <section class="migrate">
+      <p class="migrate__lead">This browser still holds data from before sign-in.</p>
+      <p class="migrate__note">
+        Uploading copies it to your account so every device sees it. Nothing
+        here is deleted either way.
+      </p>
+      <button class="btn btn--primary" (click)="uploadLocal()" [disabled]="migrating">
+        {{ migrating ? 'Uploading...' : 'Upload it to my account' }}
+      </button>
+    </section>
+  }
+
   <footer class="home__footer">
     <p class="home__note">
-      Everything is stored in this browser only. Back up before clearing site
-      data, or to move your history to another device.
+      Your data is on your account now, so every device sees the same thing.
+      Download a copy whenever you like — it is yours.
     </p>
     <div class="home__actions">
       <button class="home__action" (click)="download()" [disabled]="busy">
         Download backup
       </button>
-      <label class="home__action">
-        Restore
-        <input type="file" accept="application/json,.json"
-               (change)="restore($event)" hidden />
-      </label>
+      <button class="home__action" (click)="signOut()">
+        Sign out
+      </button>
     </div>
   </footer>
 </div>

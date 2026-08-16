@@ -1,12 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { ChallengesService } from './challenges.service';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
+import { InMemoryDbService } from './testing/in-memory-db.service';
 import { Challenge, ChallengeRule, ChallengeRuleLog } from './models';
 
 describe('ChallengesService', () => {
   let service: ChallengesService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
   let challenge: Challenge;
   let rule: ChallengeRule;
 
@@ -16,10 +17,12 @@ describe('ChallengesService', () => {
   }
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{ provide: DbService, useClass: InMemoryDbService }]
+    });
     service = TestBed.inject(ChallengesService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
     challenge = await firstValueFrom(
       service.create({ name: 'No sugar', status: 'active', start_date: '2026-08-01', duration_days: 30 })
     );

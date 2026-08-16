@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
-import { LocalDbService } from './local-db.service';
+import { Observable, map } from 'rxjs';
+import { DbService } from './db.service';
 import { Habit, HabitLog } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class HabitsService {
-  private db = inject(LocalDbService);
+  private db = inject(DbService);
 
   list(): Observable<Habit[]> {
     return this.db.all<Habit>('habits').pipe(
@@ -18,14 +18,13 @@ export class HabitsService {
     return this.db.insert<Habit>('habits', note ? { name, note } : { name });
   }
 
+  /** Logs go with the habit: the database cascades on delete. */
   remove(id: string): Observable<void> {
-    return this.db.removeWhere('habit_logs', 'habit_id', id).pipe(
-      switchMap(() => this.db.remove('habits', id))
-    );
+    return this.db.remove('habits', id);
   }
 
   logs(from: string, to: string): Observable<HabitLog[]> {
-    return this.db.all<HabitLog>('habit_logs').pipe(
+    return this.allLogs().pipe(
       map(rows => rows.filter(r => r.logged_date >= from && r.logged_date <= to))
     );
   }
@@ -36,37 +35,18 @@ export class HabitsService {
   }
 
   /**
-   * A log is identified by its habit and day rather than a generated id, so
-   * marking a day is one atomic write. The previous read-then-write pair let
-   * two quick taps interleave: both reads saw no row, and one tap was lost.
+   * One atomic write either way. Marking is idempotent by unique constraint
+   * and clearing tolerates there being nothing to clear, so two quick taps
+   * cannot lose one another.
    */
-  private static logId(habitId: string, loggedDate: string): string {
-    return `${habitId}:${loggedDate}`;
-  }
-
   setLogged(habitId: string, loggedDate: string, logged: boolean): Observable<void> {
-    const id = HabitsService.logId(habitId, loggedDate);
-
     if (logged) {
-      return this.db.put<HabitLog>('habit_logs', {
-        id,
-        habit_id: habitId,
-        logged_date: loggedDate,
-        created_at: new Date().toISOString()
-      }).pipe(map(() => undefined));
+      return this.db.upsertUnique(
+        'habit_logs',
+        { habit_id: habitId, logged_date: loggedDate },
+        'user_id,habit_id,logged_date'
+      );
     }
-
-    // Rows written before ids were derived still carry a generated one, so
-    // clearing a day has to sweep by field as well as by key.
-    return this.db.remove('habit_logs', id).pipe(
-      switchMap(() => this.db.all<HabitLog>('habit_logs')),
-      switchMap(rows => {
-        const strays = rows.filter(
-          r => r.habit_id === habitId && r.logged_date === loggedDate);
-        if (!strays.length) return of(undefined);
-        return forkJoin(strays.map(r => this.db.remove('habit_logs', r.id)))
-          .pipe(map(() => undefined));
-      })
-    );
+    return this.db.removeWhere('habit_logs', { habit_id: habitId, logged_date: loggedDate });
   }
 }

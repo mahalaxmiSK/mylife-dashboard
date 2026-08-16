@@ -3,13 +3,14 @@ import { provideRouter } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { ChallengesComponent } from './challenges.component';
 import { ChallengesService } from '../core/services/challenges.service';
-import { LocalDbService } from '../core/services/local-db.service';
+import { DbService } from '../core/services/db.service';
+import { InMemoryDbService } from '../core/services/testing/in-memory-db.service';
 import { SeedService } from '../core/services/seed.service';
 import { Challenge, today } from '../core/services/models';
 
 describe('ChallengesComponent', () => {
   let service: ChallengesService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
 
   function daysAgo(n: number): string {
     const d = new Date();
@@ -36,11 +37,11 @@ describe('ChallengesComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ChallengesComponent],
-      providers: [provideRouter([])]
+      providers: [provideRouter([]), { provide: DbService, useClass: InMemoryDbService }]
     }).compileComponents();
     service = TestBed.inject(ChallengesService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
     // Claim the seed slot with an empty seed, so these tests see only the
     // fixture they set up rather than the starter challenges as well.
     await firstValueFrom(TestBed.inject(SeedService).ensureSeeded('challenges', () => of(undefined)));

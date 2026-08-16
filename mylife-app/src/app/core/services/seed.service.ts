@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, of, switchMap } from 'rxjs';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
 
 interface SeedMark {
   id: string;
-  seeded_at: string;
+  key: string;
   [key: string]: unknown;
 }
 
@@ -16,21 +16,16 @@ interface SeedMark {
  * (REQ-SEED-03) — checking "is it empty?" instead would quietly refill it
  * every time, which would be maddening.
  *
- * The mark lives in IndexedDB rather than localStorage so it travels with a
- * backup, and later with sync: restoring onto a second device must not look
- * like a fresh install and seed a duplicate set.
+ * It lives in the database rather than on the device so that signing in on a
+ * second device does not look like a fresh install and seed a duplicate set.
  */
 @Injectable({ providedIn: 'root' })
 export class SeedService {
-  private db = inject(LocalDbService);
-
-  private static markId(module: string): string {
-    return `seeded:${module}`;
-  }
+  private db = inject(DbService);
 
   hasSeeded(module: string): Observable<boolean> {
-    return this.db.all<SeedMark>('app_meta').pipe(
-      map(rows => rows.some(r => r.id === SeedService.markId(module)))
+    return this.db.where<SeedMark>('app_meta', { key: module }).pipe(
+      map(rows => rows.length > 0)
     );
   }
 
@@ -44,10 +39,7 @@ export class SeedService {
       switchMap(already => {
         if (already) return of(false);
         return seed().pipe(
-          switchMap(() => this.db.put<SeedMark>('app_meta', {
-            id: SeedService.markId(module),
-            seeded_at: new Date().toISOString()
-          })),
+          switchMap(() => this.db.upsertUnique('app_meta', { key: module }, 'user_id,key')),
           map(() => true)
         );
       })

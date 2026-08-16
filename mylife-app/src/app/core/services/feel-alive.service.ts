@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
 import { FeelAliveItem } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class FeelAliveService {
-  private db = inject(LocalDbService);
+  private db = inject(DbService);
 
   list(): Observable<FeelAliveItem[]> {
     return this.db.all<FeelAliveItem>('feel_alive_items').pipe(

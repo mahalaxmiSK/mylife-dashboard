@@ -1,12 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { RoutinesService } from './routines.service';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
+import { InMemoryDbService } from './testing/in-memory-db.service';
 import { RoutineItem, RoutineTemplate } from './models';
 
 describe('RoutinesService', () => {
   let service: RoutinesService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
 
   /** A template with one step, the common starting point for the tick tests. */
   async function seedStep(): Promise<{ template: RoutineTemplate; step: RoutineItem }> {
@@ -16,10 +17,12 @@ describe('RoutinesService', () => {
   }
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{ provide: DbService, useClass: InMemoryDbService }]
+    });
     service = TestBed.inject(RoutinesService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
   });
 
   it('reads back a step ticked on a given day', async () => {

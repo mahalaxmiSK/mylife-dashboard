@@ -1,17 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { EqService } from './eq.service';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
+import { InMemoryDbService } from './testing/in-memory-db.service';
 
 describe('EqService', () => {
   let service: EqService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{ provide: DbService, useClass: InMemoryDbService }]
+    });
     service = TestBed.inject(EqService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
   });
 
   describe('suggestions', () => {

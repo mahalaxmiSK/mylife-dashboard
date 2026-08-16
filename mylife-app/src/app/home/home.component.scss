@@ -80,3 +80,25 @@
   &:hover { color: var(--text); border-color: var(--accent); }
   &:disabled { opacity: 0.5; cursor: default; }
 }
+
+/** The one-time upload offer. Present, not nagging. */
+.migrate {
+  margin-top: 28px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.migrate__lead {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.migrate__note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}

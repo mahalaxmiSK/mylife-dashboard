@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { StarterContentService } from './starter-content.service';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
+import { InMemoryDbService } from './testing/in-memory-db.service';
 import { RoutinesService } from './routines.service';
 import { FeelAliveService } from './feel-alive.service';
 import { HabitsService } from './habits.service';
@@ -10,7 +11,7 @@ import { ChallengesService } from './challenges.service';
 
 describe('StarterContentService', () => {
   let starter: StarterContentService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
   let routines: RoutinesService;
   let feelAlive: FeelAliveService;
   let habits: HabitsService;
@@ -18,15 +19,17 @@ describe('StarterContentService', () => {
   let challenges: ChallengesService;
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{ provide: DbService, useClass: InMemoryDbService }]
+    });
     starter = TestBed.inject(StarterContentService);
-    db = TestBed.inject(LocalDbService);
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
     routines = TestBed.inject(RoutinesService);
     feelAlive = TestBed.inject(FeelAliveService);
     habits = TestBed.inject(HabitsService);
     techReads = TestBed.inject(TechReadsService);
     challenges = TestBed.inject(ChallengesService);
-    await db.clearAll();
+    db.clear();
   });
 
   describe('routines', () => {

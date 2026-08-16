@@ -1,17 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { TechReadsService } from './tech-reads.service';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
+import { InMemoryDbService } from './testing/in-memory-db.service';
 
 describe('TechReadsService', () => {
   let service: TechReadsService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{ provide: DbService, useClass: InMemoryDbService }]
+    });
     service = TestBed.inject(TechReadsService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
   });
 
   it('keeps the note saying why a topic is worth the time', async () => {

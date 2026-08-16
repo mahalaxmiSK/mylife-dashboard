@@ -3,13 +3,14 @@ import { provideRouter } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { RoutinesComponent } from './routines.component';
 import { RoutinesService } from '../core/services/routines.service';
-import { LocalDbService } from '../core/services/local-db.service';
+import { DbService } from '../core/services/db.service';
+import { InMemoryDbService } from '../core/services/testing/in-memory-db.service';
 import { SeedService } from '../core/services/seed.service';
 import { today } from '../core/services/models';
 
 describe('RoutinesComponent', () => {
   let service: RoutinesService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
 
   /**
    * Zone stability does not track the chained IndexedDB reads behind a day
@@ -37,11 +38,11 @@ describe('RoutinesComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RoutinesComponent],
-      providers: [provideRouter([])]
+      providers: [provideRouter([]), { provide: DbService, useClass: InMemoryDbService }]
     }).compileComponents();
     service = TestBed.inject(RoutinesService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
     // Claim the seed slot with an empty seed, so these tests work against the
     // two steps below rather than the starter routine as well.
     await firstValueFrom(

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, of } from 'rxjs';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
 import { EQ_SUGGESTIONS } from './eq-suggestions.data';
 import { EQ_EXPLORE_QUESTIONS } from './eq-explore.data';
 import {
@@ -19,7 +19,7 @@ const EXPLORE_QUESTION_COUNT = 3;
 
 @Injectable({ providedIn: 'root' })
 export class EqService {
-  private db = inject(LocalDbService);
+  private db = inject(DbService);
 
   checkins(): Observable<EqCheckin[]> {
     return this.db.all<EqCheckin>('eq_checkins').pipe(
@@ -75,8 +75,9 @@ export class EqService {
   }
 
   /**
-   * Reference data, bundled with the app rather than stored per-device. Falls
-   * back to the general set so a custom emotion is not a dead end (REQ-EQ-03).
+   * Reference data, bundled with the app rather than stored per user: the
+   * suggestions are identical for everyone and need no table (REQ-SEED-07).
+   * Falls back to the general set so a custom emotion is not a dead end.
    */
   suggestionsFor(emotion: string): Observable<EqSuggestion[]> {
     const own = EQ_SUGGESTIONS.filter(s => s.emotion === emotion);

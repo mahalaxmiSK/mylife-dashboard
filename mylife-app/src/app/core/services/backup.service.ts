@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { LocalDbService } from './local-db.service';
+import { firstValueFrom } from 'rxjs';
+import { DbService, TABLES } from './db.service';
 
 interface BackupFile {
   format: string;
@@ -10,21 +11,36 @@ interface BackupFile {
 
 const FORMAT = 'mylife-backup';
 
+/**
+ * REQ-SYNC-07 / REQ-NFR-04: the user is never locked in and always holds a
+ * copy. Now that the data lives on someone else's server, an export that only
+ * read this device would be worse than useless — it would look like a backup
+ * while containing nothing.
+ *
+ * There is deliberately no restore-from-file any more. Overwriting a synced
+ * account from a stale file is a far more destructive act than replacing one
+ * device's local store, and needs conflict rules that do not exist yet. The
+ * export stays; putting it back is not offered until that is thought through.
+ */
 @Injectable({ providedIn: 'root' })
 export class BackupService {
-  private db = inject(LocalDbService);
+  private db = inject(DbService);
 
-  /** Triggers a download of everything in the local database. */
+  /** Downloads everything the signed-in account can see. */
   async download(): Promise<void> {
+    const data: Record<string, unknown[]> = {};
+    for (const table of TABLES) {
+      data[table] = await firstValueFrom(this.db.all(table));
+    }
+
     const payload: BackupFile = {
       format: FORMAT,
-      version: 1,
+      version: 2,
       exported_at: new Date().toISOString(),
-      data: await this.db.exportAll()
+      data
     };
 
-    const blob = new Blob([JSON.stringify(payload, null, 2)],
-      { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const date = new Date().toISOString().slice(0, 10);
 
@@ -34,22 +50,5 @@ export class BackupService {
     link.click();
 
     URL.revokeObjectURL(url);
-  }
-
-  /** Replaces all local data with the contents of a backup file. */
-  async restore(file: File): Promise<number> {
-    let parsed: BackupFile;
-    try {
-      parsed = JSON.parse(await file.text());
-    } catch {
-      throw new Error('That file is not valid JSON.');
-    }
-
-    if (parsed?.format !== FORMAT || !parsed.data) {
-      throw new Error('That does not look like a MyLife backup file.');
-    }
-
-    await this.db.importAll(parsed.data);
-    return Object.values(parsed.data).reduce((sum, rows) => sum + rows.length, 0);
   }
 }

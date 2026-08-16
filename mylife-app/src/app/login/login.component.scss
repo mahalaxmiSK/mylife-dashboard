@@ -1,0 +1,52 @@
+.login {
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 96px 24px 64px;
+  text-align: center;
+}
+
+.login__title {
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.login__lead {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  .btn { justify-content: center; }
+}
+
+.login__sent {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.login__note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+/** Muted rather than alarming: a wrong address is not an emergency. */
+.login__error {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}

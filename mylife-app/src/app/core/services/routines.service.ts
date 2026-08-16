@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
 import { DAY_TYPE_TITLES, RoutineItem, RoutineItemLog, RoutineTemplate } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class RoutinesService {
-  private db = inject(LocalDbService);
+  private db = inject(DbService);
 
   templates(): Observable<RoutineTemplate[]> {
     return this.db.all<RoutineTemplate>('routines_templates').pipe(
@@ -16,7 +16,7 @@ export class RoutinesService {
 
   createTemplate(dayType: string, title: string): Observable<RoutineTemplate> {
     return this.db.insert<RoutineTemplate>('routines_templates', {
-      day_type: dayType as RoutineTemplate['day_type'],
+      day_type: dayType,
       title
     });
   }
@@ -24,7 +24,8 @@ export class RoutinesService {
   /**
    * The one template for a day type, created on first use. The four day types
    * are the interface (REQ-ROUT-01), so there is nowhere to put a second
-   * template of the same type and nothing that would open it.
+   * template of the same type — and a unique constraint on (user_id, day_type)
+   * says so in the database as well.
    */
   templateFor(dayType: RoutineTemplate['day_type']): Observable<RoutineTemplate> {
     return this.templates().pipe(
@@ -36,10 +37,8 @@ export class RoutinesService {
   }
 
   items(templateId: string): Observable<RoutineItem[]> {
-    return this.db.all<RoutineItem>('routines_items').pipe(
-      map(rows => rows
-        .filter(r => r.template_id === templateId)
-        .sort((a, b) => a.position - b.position))
+    return this.db.where<RoutineItem>('routines_items', { template_id: templateId }).pipe(
+      map(rows => rows.sort((a, b) => a.position - b.position))
     );
   }
 
@@ -60,52 +59,39 @@ export class RoutinesService {
     );
   }
 
+  /** Logs go with the step: the database cascades on delete. */
   removeItem(id: string): Observable<void> {
-    return this.db.removeWhere('routine_item_logs', 'item_id', id).pipe(
-      switchMap(() => this.db.remove('routines_items', id))
-    );
+    return this.db.remove('routines_items', id);
   }
 
-  /** Removes the template, its steps, and every tick recorded against them. */
+  /** Steps and their logs go with the template, again by cascade. */
   removeTemplate(id: string): Observable<void> {
-    return this.items(id).pipe(
-      switchMap(items => items.length
-        ? forkJoin(items.map(i => this.db.removeWhere('routine_item_logs', 'item_id', i.id)))
-        : of([])),
-      switchMap(() => this.db.removeWhere('routines_items', 'template_id', id)),
-      switchMap(() => this.db.remove('routines_templates', id))
-    );
+    return this.db.remove('routines_templates', id);
   }
 
   // ---------- Daily ticks ----------
 
   /** Ids of the steps ticked on the given local date. */
   tickedOn(date: string): Observable<string[]> {
-    return this.db.all<RoutineItemLog>('routine_item_logs').pipe(
-      map(rows => rows.filter(r => r.logged_date === date).map(r => r.item_id))
+    return this.db.where<RoutineItemLog>('routine_item_logs', { logged_date: date }).pipe(
+      map(rows => rows.map(r => r.item_id))
     );
   }
 
   /**
-   * A tick is identified by its step and day rather than a generated id, so
-   * tick and untick are each a single atomic write. Toggling quickly cannot
-   * interleave a stale read the way a read-modify-write pair would.
+   * Idempotent by unique constraint, so ticking twice is a no-op and two quick
+   * taps cannot interleave into a duplicate.
    */
-  private static logId(itemId: string, date: string): string {
-    return `${itemId}:${date}`;
-  }
-
   tick(itemId: string, date: string): Observable<void> {
-    return this.db.put<RoutineItemLog>('routine_item_logs', {
-      id: RoutinesService.logId(itemId, date),
-      item_id: itemId,
-      logged_date: date,
-      created_at: new Date().toISOString()
-    }).pipe(map(() => undefined));
+    return this.db.upsertUnique(
+      'routine_item_logs',
+      { item_id: itemId, logged_date: date },
+      'user_id,item_id,logged_date'
+    );
   }
 
-  /** Deleting a key that is not there succeeds, so this is safely repeatable. */
+  /** Deleting rows that are not there succeeds, so this is safely repeatable. */
   untick(itemId: string, date: string): Observable<void> {
-    return this.db.remove('routine_item_logs', RoutinesService.logId(itemId, date));
+    return this.db.removeWhere('routine_item_logs', { item_id: itemId, logged_date: date });
   }
 }

@@ -3,12 +3,13 @@ import { provideRouter } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { TechReadsComponent } from './tech-reads.component';
 import { TechReadsService } from '../core/services/tech-reads.service';
-import { LocalDbService } from '../core/services/local-db.service';
+import { DbService } from '../core/services/db.service';
+import { InMemoryDbService } from '../core/services/testing/in-memory-db.service';
 import { SeedService } from '../core/services/seed.service';
 
 describe('TechReadsComponent', () => {
   let service: TechReadsService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
 
   async function mount(seed: { title: string; pct: number }[]): Promise<TechReadsComponent> {
     for (const { title, pct } of seed) {
@@ -28,11 +29,11 @@ describe('TechReadsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TechReadsComponent],
-      providers: [provideRouter([])]
+      providers: [provideRouter([]), { provide: DbService, useClass: InMemoryDbService }]
     }).compileComponents();
     service = TestBed.inject(TechReadsService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
     // Claim the seed slot with an empty seed, so these tests see only their
     // own fixture rather than the starter topics as well.
     await firstValueFrom(TestBed.inject(SeedService).ensureSeeded('tech-reads', () => of(undefined)));

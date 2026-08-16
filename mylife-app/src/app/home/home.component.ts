@@ -1,8 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { BackupService } from '../core/services/backup.service';
 import { ToastService } from '../core/services/toast.service';
+import { AuthService } from '../core/services/auth.service';
+import { MigrationService } from '../core/services/migration.service';
 
 interface WorkspaceCard {
   route: string;
@@ -18,12 +20,19 @@ interface WorkspaceCard {
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   private backup = inject(BackupService);
   private toast = inject(ToastService);
+  private auth = inject(AuthService);
+  private migration = inject(MigrationService);
+  private router = inject(Router);
 
   today = new Date();
   busy = false;
+
+  /** Shown only while there is local data that has never been uploaded. */
+  offerMigration = false;
+  migrating = false;
 
   /**
    * REQ-HOME-01 asks for emoji rather than abstract glyphs, and REQ-HOME-02 for
@@ -42,6 +51,15 @@ export class HomeComponent {
     { route: '/habits',     icon: '🌱', title: 'Habits',        subtitle: "Today's list, and your streaks" },
     { route: '/challenges', icon: '🏔️', title: 'Challenges',    subtitle: 'Daily rules, day by day' }
   ];
+
+  async ngOnInit(): Promise<void> {
+    // Offered once, and only when there is genuinely something to move.
+    const [hasLocal, done] = await Promise.all([
+      this.migration.hasLocalData(),
+      this.migration.alreadyMigrated()
+    ]);
+    this.offerMigration = hasLocal && !done;
+  }
 
   get greeting(): string {
     const hour = this.today.getHours();
@@ -63,25 +81,31 @@ export class HomeComponent {
     }
   }
 
-  async restore(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file || this.busy) return;
-
-    const confirmed = confirm(
-      'Restoring replaces everything currently on this device. Continue?');
-    if (!confirmed) return;
-
-    this.busy = true;
+  /** REQ-SYNC-06. Nothing local is deleted, so this is safe to try. */
+  async uploadLocal(): Promise<void> {
+    if (this.migrating) return;
+    this.migrating = true;
     try {
-      const count = await this.backup.restore(file);
-      this.toast.show(`Restored ${count} items`);
-      setTimeout(() => location.reload(), 800);
-    } catch (error) {
-      this.toast.show(error instanceof Error ? error.message : 'Restore failed');
+      const report = await this.migration.run();
+      this.offerMigration = false;
+      this.toast.show(
+        report.skipped
+          ? `Uploaded ${report.uploaded} items, skipped ${report.skipped} already there`
+          : `Uploaded ${report.uploaded} items`
+      );
+      setTimeout(() => location.reload(), 1200);
+    } catch {
+      this.toast.show('Could not upload. Your local copy is untouched.');
     } finally {
-      this.busy = false;
+      this.migrating = false;
     }
+  }
+
+  /** REQ-SYNC-08: clears the session, leaves remote data alone. */
+  signOut(): void {
+    this.auth.signOut().subscribe({
+      next: () => this.router.navigate(['/login']),
+      error: () => this.toast.show('Could not sign out')
+    });
   }
 }

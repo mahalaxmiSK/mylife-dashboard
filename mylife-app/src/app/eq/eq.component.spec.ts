@@ -3,11 +3,12 @@ import { provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { EqComponent } from './eq.component';
 import { EqService } from '../core/services/eq.service';
-import { LocalDbService } from '../core/services/local-db.service';
+import { DbService } from '../core/services/db.service';
+import { InMemoryDbService } from '../core/services/testing/in-memory-db.service';
 
 describe('EqComponent', () => {
   let service: EqService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
   let component: EqComponent;
 
   async function settle(): Promise<void> {
@@ -17,11 +18,11 @@ describe('EqComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [EqComponent],
-      providers: [provideRouter([])]
+      providers: [provideRouter([]), { provide: DbService, useClass: InMemoryDbService }]
     }).compileComponents();
     service = TestBed.inject(EqService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
 
     const fixture = TestBed.createComponent(EqComponent);
     fixture.detectChanges();

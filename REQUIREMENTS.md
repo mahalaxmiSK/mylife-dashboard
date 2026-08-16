@@ -1,7 +1,7 @@
 # MyLife Dashboard — Requirements Specification
 
-**Version:** 2.1
-**Date:** 16 August 2026
+**Version:** 3.0
+**Date:** 17 August 2026
 **Live:** https://mahalaxmisk.github.io/mylife-dashboard/
 **Supersedes:** `docs/superpowers/specs/2026-05-11-mylife-dashboard-design.md`
 
@@ -26,14 +26,15 @@ depleted must not feel like another demand.
 | --- | --- |
 | Deployed | GitHub Pages, auto-deploys on push to `master` |
 | Frontend | Angular 17, standalone components, hash routing |
-| Storage | Browser IndexedDB — **local to one device** |
-| Auth | None |
-| Sync | None |
+| Storage | Supabase Postgres, `ap-south-1`, free tier |
+| Auth | Magic link, one account, enforced by a database trigger |
+| Sync | Every device sees the same data |
 | Tests | 114 passing, headless Chrome |
 | Content | 39 emotions, 292 suggestions, 4 routines, 12 habits, 6 challenges, 20 topics |
 | Owner | A .NET developer learning Angular — relevant to REQ-SEED-05 |
 
-Six modules exist and work. Data never leaves the device it was typed on.
+Six modules exist and work. IndexedDB is no longer the store; it is kept only
+so the data already on a device can be uploaded once (REQ-SYNC-06).
 
 ---
 
@@ -41,7 +42,7 @@ Six modules exist and work. Data never leaves the device it was typed on.
 
 | Rank | Item | Status |
 | --- | --- | --- |
-| **P1** | Cross-device sync with login (§5) | blocked — needs an access token (§5.5) |
+| ~~P1~~ | Cross-device sync with login (§5) | **done** — awaiting the owner's first sign-in |
 | ~~P2~~ | Restore missing module behaviour (§6) | **done** |
 | **P3** | Starter content and personalisation (§7) | done, bar REQ-SEED-11 and 12 |
 | P4 | Installable on phone home screen (§8.1) | not started |
@@ -80,16 +81,22 @@ work, which is why they're one requirement.
 
 ### 5.2 Requirements
 
-**REQ-SYNC-01** — Data persists to a hosted database, reachable from any device.
+**REQ-SYNC-01** — Data persists to a hosted database, reachable from any device. *Done.*
 
-**REQ-SYNC-02** — Access requires email and password. No anonymous access to
-any data.
+**REQ-SYNC-02** — Access requires a login. No anonymous access to any data.
+*Done, by magic link rather than a password — see the resolved question in
+§5.5. Verified: an anonymous caller holding the publishable key is refused on
+both read and write.*
 
 **REQ-SYNC-03** — Sessions persist across browser restarts. Logging in daily
-would kill the habit of using this.
+would kill the habit of using this. *Done — the session is stored and the
+token refreshes itself.*
 
 **REQ-SYNC-04** — Account creation is disabled after the owner's account exists.
-Strangers must not be able to register.
+Strangers must not be able to register. *Done, and stronger than the wording
+asks: a trigger on auth.users makes the owner's the only address that can ever
+be inserted, so there is no window between the account existing and signups
+being closed, and no setting to flip back. Verified with a real attempt.*
 
 **REQ-SYNC-05** — Access control is enforced **by the database**, not by
 application code. A row is readable only by the user who created it, checked at
@@ -99,15 +106,26 @@ the database level on every query.
 Anyone can read that key and query the database directly. Database-level rules
 mean they get an empty result. Application-level checks would not survive this.*
 
+*Done. Every table has RLS enabled **and forced**, with one policy covering all
+operations, using `user_id = auth.uid()` for reads and `with check` for writes
+so a row cannot be written under someone else's id. `anon` is revoked outright.
+Verified against the live database: select and insert both refused.*
+
 **REQ-SYNC-06** — Data already in a browser from the local-only version must be
 uploadable to the account, with foreign keys remapped to the ids the database
-assigns. One-time, user-initiated.
+assigns. One-time, user-initiated. *Built: offered on the home screen only
+while there is local data and it has not been uploaded. Parents upload before
+their children so ids can be remapped as it goes. Nothing local is deleted.
+**Not yet exercised against real data** — see §12.*
 
 **REQ-SYNC-07** — Export to JSON remains available, so the user is never locked
-in and always holds a copy.
+in and always holds a copy. *Done, and now exports the account rather than the
+device — reading only local storage would have looked like a backup while
+containing nothing. Restore-from-file was removed: overwriting a synced account
+from a stale file needs conflict rules that do not exist yet.*
 
 **REQ-SYNC-08** — Signing out clears the local session but must not delete
-remote data.
+remote data. *Done.*
 
 ### 5.3 Explicit trade-offs
 
@@ -120,35 +138,47 @@ remote data.
 - **Free tiers pause.** Hosted databases on free plans typically pause after
   inactivity and need a click to wake.
 
-### 5.4 Design decided so far
+### 5.4 What was built
 
-- 11 tables, each with a `user_id` defaulting to the authenticated user
-- Row-level security policy per table: `user_id = auth.uid()`
-- A `routine_item_logs` table, which the old schema lacked — this is why
-  routine ticks currently vanish on reload (REQ-ROUT-03)
-- EQ suggestions bundled into the build rather than stored per-user; they are
-  identical for everyone and need no table
-- Login screen, route guard, sign-out, and a migration path for local data
+- 12 tables, each with a `user_id` defaulting to `auth.uid()`, RLS enabled and
+  forced, one policy covering every operation — see `db/schema.sql`
+- Log tables carry a unique constraint on (user, subject, date) rather than a
+  derived id, so a repeated tick is idempotent in Postgres. The same race the
+  local services hit, solved where it belongs
+- `only_owner_may_register` on `auth.users` — see `db/owner-only.sql`
+- EQ suggestions and explore questions bundled into the build, not stored: they
+  are identical for everyone and need no table
+- Magic-link login screen, route guard, sign-out, and a one-time upload of the
+  data already on a device
+- PKCE rather than the default implicit flow. The implicit flow returns the
+  session in the URL fragment, which collides head-on with hash routing —
+  `#access_token=...` versus `#/routines`. PKCE puts a code in the query string
+  instead, which nothing else wants
 
-### 5.5 Setup this requires
+### 5.5 Setup
 
-The owner wants no manual console work. All of it can be driven through the
-provider's management API instead, so the whole of this reduces to one hand-off:
+Done. The owner generated one personal access token; everything else was driven
+through the management API — restoring the paused project, dropping the
+superseded Azure-era tables (with explicit authorisation, after checking they
+held nothing), applying the schema and policies, installing the signup trigger,
+configuring magic-link auth and the redirect list, and writing the publishable
+key into the environment file.
 
-1. The owner generates a **personal access token** in the provider dashboard and
-   supplies it once. This is the only step that cannot be automated — issuing a
-   credential is the owner's to do.
-2. Everything after that is scripted: create the project, apply the schema and
-   row-level security policies, create the owner's user, disable new signups,
-   and write the publishable key into the environment files.
+Two things were deliberately **not** done. The service_role key was never read
+or written to disk: nothing in this design needs it, because the single-account
+rule is a trigger rather than an admin API call. And the owner's account is not
+created by the assistant — the first sign-in creates it, which is why no
+password is involved anywhere.
+
+**The access token should be revoked** once the owner has signed in. It is
+account-wide and was shared in a chat transcript.
 
 **REQ-SYNC-09** — Setting up sync must not require the owner to click through a
 database console. Given a token, the rest is automated.
 
-*Open question on REQ-SYNC-02: creating the account means setting a password,
-which the assistant should not do. A magic-link (email one-time code) login
-satisfies "no anonymous access" without anyone handling a password, and is
-easier on a phone. Decide before building the login screen.*
+*Resolved: magic link. No password exists for this account, so there is none to
+set, hold or leak. The owner's account is created by their own first sign-in
+rather than by the assistant, and the trigger means no one else's can be.*
 
 ---
 
@@ -413,7 +443,17 @@ with a row: the row survived and the new store appeared. This matters because
 the owner has real history in v1 databases on more than one device. v3 uses the
 same create-if-missing handler.
 
-Still not verified: the app has never been opened on a real phone, and
+**Not verified, and it matters:** the sync layer has never run against a real
+signed-in session. The services were ported to Supabase and their logic is
+still covered by 114 tests, but those tests now run against an in-memory stand-
+in for the database rather than the database itself — a real one would need a
+live session and would write to the owner's actual data. What that leaves
+unproven is every round trip: reads, optimistic writes and their rollback, the
+cascade deletes, and above all the one-time upload of existing local data,
+which has been written but never once executed against real rows. The first
+sign-in is the test.
+
+Also not verified: the app has never been opened on a real phone, and
 `ng test` only type-checks files reachable from a spec — so a component without
 one can break the build while the tests stay green. `ng build` is run alongside
 `ng test` for exactly that reason.

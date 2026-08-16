@@ -1,17 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { Observable, firstValueFrom, of, throwError } from 'rxjs';
 import { SeedService } from './seed.service';
-import { LocalDbService } from './local-db.service';
+import { DbService } from './db.service';
+import { InMemoryDbService } from './testing/in-memory-db.service';
 
 describe('SeedService', () => {
   let service: SeedService;
-  let db: LocalDbService;
+  let db: InMemoryDbService;
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{ provide: DbService, useClass: InMemoryDbService }]
+    });
     service = TestBed.inject(SeedService);
-    db = TestBed.inject(LocalDbService);
-    await db.clearAll();
+    db = TestBed.inject(DbService) as unknown as InMemoryDbService;
+    db.clear();
   });
 
   /** Counts how often the seed body actually runs. */
