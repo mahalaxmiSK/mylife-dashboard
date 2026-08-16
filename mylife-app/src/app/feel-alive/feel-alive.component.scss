@@ -1,0 +1,47 @@
+.wheel {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 8px auto 20px;
+}
+
+.wheel__face {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  // Long, heavily eased: fast off the mark, drifting to a stop.
+  transition: transform 2600ms cubic-bezier(0.15, 0.85, 0.2, 1);
+}
+
+.wheel__pointer {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 14px solid var(--text);
+  z-index: 1;
+}
+
+.wheel__actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wheel__result {
+  min-height: 24px;
+  text-align: center;
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+/** Respect a stated preference for less motion: land without the spin. */
+@media (prefers-reduced-motion: reduce) {
+  .wheel__face { transition: none; }
+}

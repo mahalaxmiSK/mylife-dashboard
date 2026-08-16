@@ -2,8 +2,30 @@
   <a class="page__back" routerLink="/">&larr; back</a>
   <h1 class="page__title">Feel Alive</h1>
 
+  <ng-container *ngIf="!loading && wheelItems.length">
+    <div class="wheel">
+      <div class="wheel__pointer" aria-hidden="true"></div>
+      <div class="wheel__face" [style.background]="wheelGradient"
+           [style.transform]="'rotate(' + rotation + 'deg)'" aria-hidden="true"></div>
+    </div>
+
+    <div class="wheel__actions">
+      <button class="btn btn--primary" (click)="spin()" [disabled]="spinning">
+        {{ spinning ? 'Spinning...' : 'Spin' }}
+      </button>
+      <button class="btn btn--ghost" (click)="pickRandom()" [disabled]="spinning">
+        Pick random
+      </button>
+    </div>
+
+    <p class="wheel__result" role="status" aria-live="polite">
+      <ng-container *ngIf="picked && !spinning">{{ picked.text }}</ng-container>
+    </p>
+  </ng-container>
+
   <div class="add-row">
-    <input class="input" [(ngModel)]="draft" (keyup.enter)="add()"
+    <label class="visually-hidden" for="new-alive">Something that makes you feel alive</label>
+    <input class="input" id="new-alive" [(ngModel)]="draft" (keyup.enter)="add()"
            placeholder="Something that makes you feel alive..." />
     <button class="btn btn--primary" (click)="add()">Add</button>
   </div>
@@ -12,9 +34,11 @@
 
   <div class="list" *ngIf="!loading">
     <div class="list-item" *ngFor="let item of items" [class.list-item--done]="item.done">
-      <input type="checkbox" [checked]="item.done" (change)="toggle(item)" />
-      <span class="list-item__text">{{ item.text }}</span>
-      <button class="icon-btn" (click)="remove(item)" aria-label="Delete">&times;</button>
+      <input type="checkbox" [id]="'alive-' + item.id"
+             [checked]="item.done" (change)="toggle(item)" />
+      <label class="list-item__text" [attr.for]="'alive-' + item.id">{{ item.text }}</label>
+      <button class="icon-btn" (click)="remove(item)"
+              attr.aria-label="Delete {{ item.text }}">&times;</button>
     </div>
     <p class="empty" *ngIf="!items.length">Nothing here yet.</p>
   </div>

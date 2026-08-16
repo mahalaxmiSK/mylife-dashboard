@@ -190,9 +190,11 @@ work.*
 ### 6.3 Feel Alive
 
 **REQ-ALIVE-01** — A spin wheel (animated CSS conic-gradient) lands on a random
-item. *Missing — and the home screen advertises it.*
+item. *Done — it offers what is not done yet, falling back to everything once
+all of it is. Honours prefers-reduced-motion.*
 
 **REQ-ALIVE-02** — A plain "Pick random" button as the simpler alternative.
+*Done.*
 
 ### 6.4 Tech Reads
 
