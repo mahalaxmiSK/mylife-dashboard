@@ -3,12 +3,8 @@ mylife-app/node_modules/
 mylife-app/dist/
 mylife-app/.angular/
 
-# .NET
-mylife-api/**/bin/
-mylife-api/**/obj/
-mylife-api/**/local.settings.json
-
-# Superpowers
+# Local tooling
+.claude/
 .superpowers/
 
 # Environment
