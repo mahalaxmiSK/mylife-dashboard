@@ -213,6 +213,13 @@ count, not a target, so there is nothing to fall short of.*
 **REQ-HABIT-02** — Streaks count consecutive days across all history, and stay
 alive when today is not yet ticked but yesterday was. *Done.*
 
+*Open question, raised by the content review: a streak that resets to zero is
+pressure however gently the words around it are written — "you cannot ship
+REQ-GEN-05 text on top of a streak counter that zeroes". Currently the number
+is hidden below two days rather than showing a zero, which softens it but does
+not settle it. Options: show total days rather than consecutive; show "best
+run" alongside; or drop the number and keep the dots. Decide deliberately.*
+
 ### 6.6 Challenges
 
 **REQ-CHAL-01** — The active challenge expands by default showing "Day N of M"
@@ -273,6 +280,33 @@ runtime. It must survive with no network and add no startup request.
 **REQ-SEED-08** — Sources for the routine and emotion content are recorded, so
 the claims behind them can be checked later rather than taken on trust.
 
+### 7.1 Raised by the content review
+
+An adversarial review of the researched content found these, and they are
+requirements rather than notes because content alone cannot satisfy them.
+
+**REQ-SEED-09** — Nothing may assume the user has housemates, plants, a garden,
+a hall, a car, people she can reach, or control over her own calendar. Any
+suggestion needing another person must have a sibling that does not. *The
+review found fifteen items requiring a reachable person, and for the "lonely"
+emotion specifically, five of seven — which is precisely the wrong place for
+that assumption.*
+
+**REQ-SEED-10** — Nothing may carry a medical claim or a contraindication.
+*"Finish your shower cold" was cut for this: cardiac and blood-pressure risks
+in a bundle that bans clinical claims.*
+
+**REQ-SEED-11** — Suggestions for an emotion are shown in a considered order
+rather than an arbitrary three, so the item that actually answers the feeling
+is not crowded out by one that is merely harmless.
+
+**REQ-SEED-12** — Feel Alive items carry a rough time-of-day fit, so the wheel
+does not offer "find three stars" at two in the afternoon.
+
+**REQ-SEED-13** — A challenge's daily rules must each be tickable at the end of
+a day. Allowances such as "miss a night, pick it up the next" belong in the
+challenge's note, not in its checklist. *Done — Challenge gained a note field.*
+
 ---
 
 ## 8. Later
@@ -288,6 +322,17 @@ collected; nothing reads across it.
 
 **REQ-FUT-03 — Weekly review.** Six modules generate real signal — moods,
 streaks, progress, abandoned challenges. None of it is ever reflected back.
+
+**REQ-FUT-05 — A routine for an ordinary working day.** The four day types all
+presume the day is the user's to shape. There is no template for "day with four
+meetings", which is most days for a salaried developer. REQ-ROUT-01 fixes the
+four tiles, so this needs a deliberate decision rather than a quiet fifth tile.
+
+**REQ-FUT-06 — Decide what the app does when a feeling is not passing.** The
+emotion list includes numb, dread and ashamed, so the territory is already
+acknowledged, and then nothing is said about a feeling that does not lift. For
+a private single-user app a crisis banner would be wrong, but the absence
+should be a decision rather than an oversight.
 
 **REQ-FUT-04 — Client-side encryption.** Encrypt note content before it leaves
 the device, so the hosting provider stores ciphertext it cannot read. Restores
