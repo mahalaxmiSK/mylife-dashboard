@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin, switchMap } from 'rxjs';
 import { ToastService } from '../core/services/toast.service';
 import { RoutinesService } from '../core/services/routines.service';
+import { StarterContentService } from '../core/services/starter-content.service';
 import { DAY_TYPES, RoutineItem, RoutineTemplate, today } from '../core/services/models';
 
 @Component({
@@ -16,6 +17,7 @@ import { DAY_TYPES, RoutineItem, RoutineTemplate, today } from '../core/services
 })
 export class RoutinesComponent {
   private service = inject(RoutinesService);
+  private starter = inject(StarterContentService);
   private toast = inject(ToastService);
 
   readonly dayTypes = DAY_TYPES;
@@ -44,10 +46,14 @@ export class RoutinesComponent {
     this.service.templateFor(type).pipe(
       switchMap(template => {
         this.active = template;
-        return forkJoin({
-          items: this.service.items(template.id),
-          ticked: this.service.tickedOn(today())
-        });
+        // Offered once per day type, so an empty list on the first visit is a
+        // real routine rather than a blank page (REQ-SEED-01).
+        return this.starter.seedRoutine(template).pipe(
+          switchMap(() => forkJoin({
+            items: this.service.items(template.id),
+            ticked: this.service.tickedOn(today())
+          }))
+        );
       })
     ).subscribe({
       next: ({ items, ticked }) => {

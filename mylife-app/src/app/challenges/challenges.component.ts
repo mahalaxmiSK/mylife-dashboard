@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ToastService } from '../core/services/toast.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, switchMap } from 'rxjs';
 import { ChallengesService } from '../core/services/challenges.service';
+import { StarterContentService } from '../core/services/starter-content.service';
 import { Challenge, ChallengeRule, ChallengeRuleLog, today } from '../core/services/models';
 
 @Component({
@@ -16,6 +17,7 @@ import { Challenge, ChallengeRule, ChallengeRuleLog, today } from '../core/servi
 })
 export class ChallengesComponent implements OnInit {
   private service = inject(ChallengesService);
+  private starter = inject(StarterContentService);
   private toast = inject(ToastService);
 
   readonly statuses: Challenge['status'][] =
@@ -50,7 +52,9 @@ export class ChallengesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.service.list().subscribe({
+    this.starter.seedChallenges().pipe(
+      switchMap(() => this.service.list())
+    ).subscribe({
       next: challenges => {
         this.challenges = challenges;
         this.loading = false;

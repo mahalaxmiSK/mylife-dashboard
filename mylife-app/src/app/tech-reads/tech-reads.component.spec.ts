@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { TechReadsComponent } from './tech-reads.component';
 import { TechReadsService } from '../core/services/tech-reads.service';
 import { LocalDbService } from '../core/services/local-db.service';
+import { SeedService } from '../core/services/seed.service';
 
 describe('TechReadsComponent', () => {
   let service: TechReadsService;
@@ -32,6 +33,9 @@ describe('TechReadsComponent', () => {
     service = TestBed.inject(TechReadsService);
     db = TestBed.inject(LocalDbService);
     await db.clearAll();
+    // Claim the seed slot with an empty seed, so these tests see only their
+    // own fixture rather than the starter topics as well.
+    await firstValueFrom(TestBed.inject(SeedService).ensureSeeded('tech-reads', () => of(undefined)));
   });
 
   describe('picking one at random', () => {

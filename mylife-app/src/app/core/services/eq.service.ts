@@ -14,6 +14,9 @@ import {
 /** REQ-EQ-04: three suggestions, no more. A longer list is another decision to make. */
 const SUGGESTION_COUNT = 3;
 
+/** REQ-EQ-02 asks for two or three questions, not the whole pool. */
+const EXPLORE_QUESTION_COUNT = 3;
+
 @Injectable({ providedIn: 'root' })
 export class EqService {
   private db = inject(LocalDbService);
@@ -48,11 +51,27 @@ export class EqService {
   }
 
   /**
-   * The same questions for the whole of one check-in, so answering the first
-   * does not change the second (REQ-EQ-02).
+   * Three questions from the pool of nine (REQ-EQ-02 asks for two or three).
+   *
+   * Which three is derived from the emotion, so naming a different feeling
+   * genuinely asks something different, while one check-in keeps the same
+   * three from first question to last — answering one must not change the
+   * next. A random pick would break that.
    */
-  exploreQuestionsFor(_emotion: string): ExploreQuestion[] {
-    return EQ_EXPLORE_QUESTIONS;
+  exploreQuestionsFor(emotion: string): ExploreQuestion[] {
+    const pool = EQ_EXPLORE_QUESTIONS;
+    const start = EqService.stableIndex(emotion, pool.length);
+    return Array.from({ length: EXPLORE_QUESTION_COUNT },
+      (_, i) => pool[(start + i) % pool.length]);
+  }
+
+  /** Small deterministic string hash; nothing here needs it to be strong. */
+  private static stableIndex(value: string, buckets: number): number {
+    let hash = 0;
+    for (let i = 0; i < value.length; i++) {
+      hash = (hash * 31 + value.charCodeAt(i)) | 0;
+    }
+    return Math.abs(hash) % buckets;
   }
 
   /**

@@ -29,7 +29,8 @@ depleted must not feel like another demand.
 | Storage | Browser IndexedDB — **local to one device** |
 | Auth | None |
 | Sync | None |
-| Tests | 21 passing, headless Chrome |
+| Tests | 114 passing, headless Chrome |
+| Content | 39 emotions, 292 suggestions, 4 routines, 12 habits, 6 challenges, 20 topics |
 | Owner | A .NET developer learning Angular — relevant to REQ-SEED-05 |
 
 Six modules exist and work. Data never leaves the device it was typed on.
@@ -41,8 +42,8 @@ Six modules exist and work. Data never leaves the device it was typed on.
 | Rank | Item | Status |
 | --- | --- | --- |
 | **P1** | Cross-device sync with login (§5) | blocked — needs an access token (§5.5) |
-| **P2** | Restore missing module behaviour (§6) | in progress — 2 of 9 done |
-| **P3** | Starter content and personalisation (§7) | not started |
+| ~~P2~~ | Restore missing module behaviour (§6) | **done** |
+| **P3** | Starter content and personalisation (§7) | done, bar REQ-SEED-11 and 12 |
 | P4 | Installable on phone home screen (§8.1) | not started |
 | P5 | Cross-module intelligence (§8.2) | not started |
 | P6 | Weekly review (§8.3) | not started |
@@ -254,31 +255,43 @@ tuned to this user rather than generic filler.
 
 **REQ-SEED-01** — Each of the four day types arrives with a real routine the
 first time it is opened — an ordered set of steps grounded in published guidance
-on rest, reset, creative and focused days, not placeholder text.
+on rest, reset, creative and focused days, not placeholder text. *Done. Lazy is
+deliberately the shortest: a ten-step checklist on the day meant for someone
+with nothing left is a contradiction. Creative is input and play with nothing to
+ship, which is what stops it being Focused in nicer words.*
 
 **REQ-SEED-02** — Seeded rows are ordinary user data. They can be edited,
-reordered and deleted exactly like hand-typed ones.
+reordered and deleted exactly like hand-typed ones. *Done.*
 
 **REQ-SEED-03** — Seeding happens per module, on first use of that module, and
 never again. A module the user has deliberately emptied stays empty — content
-must not reappear on the next visit.
+must not reappear on the next visit. *Done — and a module that already holds
+anything is marked as seeded without being written to, so upgrading never
+appends starters to lists the user built herself.*
 
 **REQ-SEED-04** — The EQ emotion list widens well beyond the current ten, and
 each emotion carries enough suggestions that a third visit does not simply
-repeat the first.
+repeat the first. *Done — 39 emotions, 292 suggestions. Includes the ones that
+are hard to name (numb, flat, resentful, envious, ashamed, wired) and the
+ordinary ones (tired, bored, fine, meh), plus "frustrated", which is not stuck
+and not angry, and is most of debugging.*
 
 **REQ-SEED-05** — Tech Reads is seeded for this user's actual stack, .NET and
 Angular, rather than a generic engineering reading list. The user is a .NET
 developer learning Angular, and the module is worthless if it ignores that.
+*Done — 20 topics, checked against what is actually current and reachable from
+Angular 17 rather than assumed.*
 
 **REQ-SEED-06** — Feel Alive, Habits and Challenges arrive with starters framed
-as examples rather than prescriptions, consistent with REQ-GEN-05.
+as examples rather than prescriptions, consistent with REQ-GEN-05. *Done —
+challenges are seeded 'upcoming' with no start date, because arriving to six
+challenges already running would be six commitments nobody made.*
 
 **REQ-SEED-07** — Seed content is bundled into the build, not fetched at
-runtime. It must survive with no network and add no startup request.
+runtime. It must survive with no network and add no startup request. *Done.*
 
 **REQ-SEED-08** — Sources for the routine and emotion content are recorded, so
-the claims behind them can be checked later rather than taken on trust.
+the claims behind them can be checked later rather than taken on trust. *Done.*
 
 ### 7.1 Raised by the content review
 
@@ -382,13 +395,25 @@ Verified: storage logic against a real IndexedDB implementation (CRUD, cascade
 deletes, streak edge cases, export/import round trip); production build from a
 clean clone; built output served over HTTP.
 
-**The unit tests now run** — 21 passing against headless Chrome, up from the 7
-that had never once been executed. Routine ticks were additionally confirmed by
-hand in a browser: ticked, reloaded, still ticked.
+**The unit tests now run** — 114 passing against headless Chrome, up from the 7
+that had never once been executed. All eight data services now have tests.
+
+Confirmed by hand in a browser, not only in tests:
+- routine ticks — ticked, reloaded, still ticked
+- the EQ flow end to end — named a feeling, answered three questions one at a
+  time, reached exactly three suggestions, saw the answer in Recent
+- the spin wheel lands on the item it names, checked by deriving the settled
+  segment independently of the code that set it
+- starter content appearing in habits, tech reads, challenges and routines
+- **the upgrade path** — a module already holding the user's own items kept
+  exactly those and gained none of the starters, while empty ones seeded fully
 
 The IndexedDB v1 → v2 upgrade was verified against a genuine v1 database seeded
 with a row: the row survived and the new store appeared. This matters because
-the owner has real history in v1 databases on more than one device.
+the owner has real history in v1 databases on more than one device. v3 uses the
+same create-if-missing handler.
 
-Still not verified: the six data services other than routines have no tests at
-all, and most of the assembled UI has never been clicked through.
+Still not verified: the app has never been opened on a real phone, and
+`ng test` only type-checks files reachable from a spec — so a component without
+one can break the build while the tests stay green. `ng build` is run alongside
+`ng test` for exactly that reason.

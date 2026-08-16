@@ -43,6 +43,19 @@ describe('EqService', () => {
 
       expect(second).toEqual(first);
     });
+
+    it('asks a different feeling something different', () => {
+      const anxious = service.exploreQuestionsFor('anxious').map(q => q.id);
+      const grateful = service.exploreQuestionsFor('grateful').map(q => q.id);
+
+      expect(anxious).not.toEqual(grateful);
+    });
+
+    it('never asks the same question twice in one check-in', () => {
+      const ids = service.exploreQuestionsFor('overwhelmed').map(q => q.id);
+
+      expect(new Set(ids).size).toBe(ids.length);
+    });
   });
 
   describe('check-ins', () => {

@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { RoutinesComponent } from './routines.component';
 import { RoutinesService } from '../core/services/routines.service';
 import { LocalDbService } from '../core/services/local-db.service';
+import { SeedService } from '../core/services/seed.service';
 import { today } from '../core/services/models';
 
 describe('RoutinesComponent', () => {
@@ -41,6 +42,10 @@ describe('RoutinesComponent', () => {
     service = TestBed.inject(RoutinesService);
     db = TestBed.inject(LocalDbService);
     await db.clearAll();
+    // Claim the seed slot with an empty seed, so these tests work against the
+    // two steps below rather than the starter routine as well.
+    await firstValueFrom(
+      TestBed.inject(SeedService).ensureSeeded('routines:lazy', () => of(undefined)));
 
     const template = await firstValueFrom(service.templateFor('lazy'));
     await firstValueFrom(service.addItem(template.id, 'Make tea', 0));

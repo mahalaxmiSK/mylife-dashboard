@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { ChallengesComponent } from './challenges.component';
 import { ChallengesService } from '../core/services/challenges.service';
 import { LocalDbService } from '../core/services/local-db.service';
+import { SeedService } from '../core/services/seed.service';
 import { Challenge, today } from '../core/services/models';
 
 describe('ChallengesComponent', () => {
@@ -40,6 +41,9 @@ describe('ChallengesComponent', () => {
     service = TestBed.inject(ChallengesService);
     db = TestBed.inject(LocalDbService);
     await db.clearAll();
+    // Claim the seed slot with an empty seed, so these tests see only the
+    // fixture they set up rather than the starter challenges as well.
+    await firstValueFrom(TestBed.inject(SeedService).ensureSeeded('challenges', () => of(undefined)));
   });
 
   it('sinks finished challenges below the running ones', async () => {

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ToastService } from '../core/services/toast.service';
 import { EqService } from '../core/services/eq.service';
+import { EQ_EMOTIONS } from '../core/services/eq-suggestions.data';
 import {
   EqCheckin,
   EqSuggestion,
@@ -25,10 +26,7 @@ export class EqComponent implements OnInit {
   private toast = inject(ToastService);
 
   /** The preset list is a starting point, not a limit — see useCustomEmotion. */
-  readonly emotions = [
-    'anxious', 'overwhelmed', 'sad', 'angry', 'numb',
-    'lonely', 'stuck', 'hopeful', 'grateful', 'excited'
-  ];
+  readonly emotions = EQ_EMOTIONS;
 
   step: Step = 'name';
   emotion: string | null = null;

@@ -2,8 +2,10 @@ import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs';
 import { ToastService } from '../core/services/toast.service';
 import { FeelAliveService } from '../core/services/feel-alive.service';
+import { StarterContentService } from '../core/services/starter-content.service';
 import { FeelAliveItem } from '../core/services/models';
 
 /** Matches the CSS transition on the wheel. */
@@ -35,6 +37,7 @@ export function nextRotation(current: number, index: number, count: number): num
 })
 export class FeelAliveComponent implements OnInit, OnDestroy {
   private service = inject(FeelAliveService);
+  private starter = inject(StarterContentService);
   private toast = inject(ToastService);
 
   items: FeelAliveItem[] = [];
@@ -108,7 +111,9 @@ export class FeelAliveComponent implements OnInit, OnDestroy {
 
   private load(): void {
     this.loading = true;
-    this.service.list().subscribe({
+    this.starter.seedFeelAlive().pipe(
+      switchMap(() => this.service.list())
+    ).subscribe({
       next: items => { this.items = items; this.loading = false; },
       error: () => { this.loading = false; this.toast.show('Could not load your list'); }
     });

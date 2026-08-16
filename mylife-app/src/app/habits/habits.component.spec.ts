@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { HabitsComponent } from './habits.component';
 import { HabitsService } from '../core/services/habits.service';
 import { LocalDbService } from '../core/services/local-db.service';
+import { SeedService } from '../core/services/seed.service';
 import { today } from '../core/services/models';
 
 describe('HabitsComponent', () => {
@@ -37,6 +38,9 @@ describe('HabitsComponent', () => {
     service = TestBed.inject(HabitsService);
     db = TestBed.inject(LocalDbService);
     await db.clearAll();
+    // Claim the seed slot with an empty seed, so these tests see only their
+    // own fixture rather than the starter habits as well.
+    await firstValueFrom(TestBed.inject(SeedService).ensureSeeded('habits', () => of(undefined)));
   });
 
   it('marks a habit done for today in one tap', async () => {

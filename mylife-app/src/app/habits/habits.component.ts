@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ToastService } from '../core/services/toast.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, switchMap } from 'rxjs';
 import { HabitsService } from '../core/services/habits.service';
+import { StarterContentService } from '../core/services/starter-content.service';
 import { Habit, HabitLog, today } from '../core/services/models';
 
 const WINDOW_DAYS = 7;
@@ -18,6 +19,7 @@ const WINDOW_DAYS = 7;
 })
 export class HabitsComponent implements OnInit {
   private service = inject(HabitsService);
+  private starter = inject(StarterContentService);
   private toast = inject(ToastService);
 
   habits: Habit[] = [];
@@ -46,10 +48,12 @@ export class HabitsComponent implements OnInit {
 
   private load(): void {
     this.loading = true;
-    forkJoin({
-      habits: this.service.list(),
-      logs: this.service.allLogs()
-    }).subscribe({
+    this.starter.seedHabits().pipe(
+      switchMap(() => forkJoin({
+        habits: this.service.list(),
+        logs: this.service.allLogs()
+      }))
+    ).subscribe({
       next: ({ habits, logs }) => {
         this.habits = habits;
         this.logged = new Set(logs.map((l: HabitLog) => `${l.habit_id}|${l.logged_date}`));

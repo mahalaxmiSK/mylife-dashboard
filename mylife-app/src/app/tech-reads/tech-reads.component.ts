@@ -2,8 +2,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs';
 import { ToastService } from '../core/services/toast.service';
 import { TechReadsService } from '../core/services/tech-reads.service';
+import { StarterContentService } from '../core/services/starter-content.service';
 import { TechTopic } from '../core/services/models';
 
 @Component({
@@ -15,6 +17,7 @@ import { TechTopic } from '../core/services/models';
 })
 export class TechReadsComponent implements OnInit {
   private service = inject(TechReadsService);
+  private starter = inject(StarterContentService);
   private toast = inject(ToastService);
 
   topics: TechTopic[] = [];
@@ -52,7 +55,9 @@ export class TechReadsComponent implements OnInit {
 
   private load(): void {
     this.loading = true;
-    this.service.list().subscribe({
+    this.starter.seedTechReads().pipe(
+      switchMap(() => this.service.list())
+    ).subscribe({
       next: topics => { this.topics = topics; this.loading = false; },
       error: () => { this.loading = false; this.toast.show('Could not load your topics'); }
     });

@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { FeelAliveComponent, nextRotation } from './feel-alive.component';
 import { FeelAliveService } from '../core/services/feel-alive.service';
 import { LocalDbService } from '../core/services/local-db.service';
+import { SeedService } from '../core/services/seed.service';
 
 describe('FeelAliveComponent', () => {
   let service: FeelAliveService;
@@ -42,6 +43,9 @@ describe('FeelAliveComponent', () => {
     service = TestBed.inject(FeelAliveService);
     db = TestBed.inject(LocalDbService);
     await db.clearAll();
+    // Claim the seed slot with an empty seed, so these tests see only their
+    // own fixture rather than the starter list as well.
+    await firstValueFrom(TestBed.inject(SeedService).ensureSeeded('feel-alive', () => of(undefined)));
   });
 
   it('picks nothing when there is nothing on the list', async () => {
