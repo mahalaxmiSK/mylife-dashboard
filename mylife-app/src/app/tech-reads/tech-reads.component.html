@@ -37,6 +37,7 @@
                (input)="setProgress(topic, $any($event.target).value)" />
         <span class="topic__pct">{{ topic.progress_pct }}%</span>
       </div>
+      <p class="topic__note" *ngIf="topic.note">{{ topic.note }}</p>
       <span class="label">{{ statusLabel(topic.status) }}</span>
     </div>
     <p class="empty" *ngIf="!topics.length">No topics yet.</p>

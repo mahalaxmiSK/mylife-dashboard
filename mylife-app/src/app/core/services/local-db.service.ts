@@ -12,15 +12,17 @@ export const STORES = [
   'habit_logs',
   'challenges',
   'challenge_rules',
-  'challenge_rule_logs'
+  'challenge_rule_logs',
+  'app_meta'
 ] as const;
 
 export type StoreName = (typeof STORES)[number];
 
 const DB_NAME = 'mylife';
-// v2 added routine_item_logs. The upgrade handler creates whatever is missing,
-// so existing v1 databases gain the store without losing their contents.
-const DB_VERSION = 2;
+// v2 added routine_item_logs, v3 added app_meta. The upgrade handler creates
+// whatever is missing, so older databases gain the stores without losing their
+// contents.
+const DB_VERSION = 3;
 
 interface Row {
   id: string;

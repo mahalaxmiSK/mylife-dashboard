@@ -32,6 +32,7 @@
         <span class="label" *ngIf="dayNumber(active) as day">
           Day {{ day }}<ng-container *ngIf="active.duration_days"> of {{ active.duration_days }}</ng-container>
         </span>
+        <p class="header-card__note" *ngIf="active.note">{{ active.note }}</p>
         <label class="visually-hidden" for="challenge-status">Status</label>
         <select class="input select" id="challenge-status" [ngModel]="active.status"
                 (ngModelChange)="setStatus(active, $event)">

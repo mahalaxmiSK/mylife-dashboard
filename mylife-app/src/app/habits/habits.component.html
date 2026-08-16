@@ -24,7 +24,10 @@
               [attr.aria-pressed]="isDoneToday(habit)"
               (click)="toggleToday(habit)">
         <span class="today__check" aria-hidden="true">{{ isDoneToday(habit) ? '✓' : '' }}</span>
-        <span class="today__name">{{ habit.name }}</span>
+        <span class="today__text">
+          <span class="today__name">{{ habit.name }}</span>
+          <span class="today__cue" *ngIf="habit.note">{{ habit.note }}</span>
+        </span>
         <em class="today__streak" *ngIf="streak(habit.id) > 1">{{ streak(habit.id) }} days</em>
       </button>
     </div>

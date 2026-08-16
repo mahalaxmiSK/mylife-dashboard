@@ -11,6 +11,13 @@
 
 .header-card__name { flex: 1; font-size: 15px; font-weight: 600; }
 
+/** Allowances rather than rules: the part that stops this becoming a stick. */
+.header-card__note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
 .days { flex: 0 0 auto; width: 64px; }
 
 .select { text-transform: capitalize; }

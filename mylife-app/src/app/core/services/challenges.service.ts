@@ -19,7 +19,8 @@ export class ChallengesService {
       name: payload.name ?? '',
       status: payload.status ?? 'upcoming',
       start_date: payload.start_date,
-      duration_days: payload.duration_days
+      duration_days: payload.duration_days,
+      note: payload.note
     } as Omit<Challenge, 'id'>);
   }
 

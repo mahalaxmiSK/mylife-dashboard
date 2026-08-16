@@ -24,6 +24,13 @@
 
 .topic__title { flex: 1; font-size: 13px; font-weight: 600; }
 
+/** Why the topic is worth the time — the reason it was worth listing. */
+.topic__note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
 .pick {
   display: flex;
   align-items: center;

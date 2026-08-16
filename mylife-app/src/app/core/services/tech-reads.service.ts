@@ -14,12 +14,9 @@ export class TechReadsService {
     );
   }
 
-  create(title: string): Observable<TechTopic> {
-    return this.db.insert<TechTopic>('tech_topics', {
-      title,
-      status: 'not_started',
-      progress_pct: 0
-    });
+  create(title: string, note?: string): Observable<TechTopic> {
+    const row = { title, status: 'not_started' as const, progress_pct: 0 };
+    return this.db.insert<TechTopic>('tech_topics', note ? { ...row, note } : row);
   }
 
   setProgress(id: string, progressPct: number): Observable<TechTopic> {

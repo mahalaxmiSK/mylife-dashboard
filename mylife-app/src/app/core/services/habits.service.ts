@@ -14,8 +14,8 @@ export class HabitsService {
     );
   }
 
-  create(name: string): Observable<Habit> {
-    return this.db.insert<Habit>('habits', { name });
+  create(name: string, note?: string): Observable<Habit> {
+    return this.db.insert<Habit>('habits', note ? { name, note } : { name });
   }
 
   remove(id: string): Observable<void> {

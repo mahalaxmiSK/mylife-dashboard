@@ -22,6 +22,22 @@ describe('HabitsService', () => {
     habit = await firstValueFrom(service.create('Walk'));
   });
 
+  it('keeps the cue that comes with a habit', async () => {
+    // The cue is the habit design: "stretch while the kettle boils" without
+    // "the moment you switch the kettle on" is just a wish.
+    await firstValueFrom(service.create('Stretch', 'Cue: when you switch the kettle on'));
+
+    const saved = (await firstValueFrom(service.list())).find(h => h.name === 'Stretch')!;
+
+    expect(saved.note).toBe('Cue: when you switch the kettle on');
+  });
+
+  it('leaves the note empty for a habit typed by hand', async () => {
+    const created = await firstValueFrom(service.create('Walk'));
+
+    expect(created.note).toBeUndefined();
+  });
+
   it('records a day and reads it back', async () => {
     await firstValueFrom(service.setLogged(habit.id, '2026-08-16', true));
 

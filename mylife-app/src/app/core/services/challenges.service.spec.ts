@@ -26,6 +26,21 @@ describe('ChallengesService', () => {
     rule = await firstValueFrom(service.addRule(challenge.id, 'No sweets', 0));
   });
 
+  it('keeps the allowances note that is not a daily rule', async () => {
+    // "Miss a night, pick it up the next" is a policy, not something you tick.
+    const created = await firstValueFrom(service.create({
+      name: 'Seven phone-free nights',
+      status: 'upcoming',
+      duration_days: 7,
+      note: 'Miss a night, pick it up the next'
+    }));
+
+    const saved = (await firstValueFrom(service.list())).find(c => c.id === created.id)!;
+
+    expect(saved.note).toBe('Miss a night, pick it up the next');
+    expect(saved.duration_days).toBe(7);
+  });
+
   it('records a rule kept on a day', async () => {
     await firstValueFrom(service.setRuleLogged(rule.id, '2026-08-16', true));
 

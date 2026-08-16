@@ -17,10 +17,18 @@ export interface TechTopic extends BaseRow {
   title: string;
   status: 'not_started' | 'in_progress' | 'done';
   progress_pct: number;
+  /** Why this is worth the time. Carries the value of a seeded topic. */
+  note?: string;
 }
 
 export interface Habit extends BaseRow {
   name: string;
+  /**
+   * The cue that triggers it. This is the habit design, not decoration:
+   * "stretch while the kettle boils" without "when you switch the kettle on"
+   * is only a wish.
+   */
+  note?: string;
 }
 
 export interface HabitLog extends BaseRow {
@@ -96,6 +104,12 @@ export interface Challenge extends BaseRow {
   status: 'upcoming' | 'active' | 'completed' | 'abandoned';
   start_date?: string;
   duration_days?: number;
+  /**
+   * Allowances and policies that are not daily rules. "Miss a night, pick it
+   * up the next" is the part that stops a challenge becoming a stick, but it
+   * is not something you tick at the end of a day (REQ-CHAL-03).
+   */
+  note?: string;
 }
 
 export interface ChallengeRule extends BaseRow {
