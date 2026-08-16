@@ -169,17 +169,19 @@ usable one-handed.*
 
 ### 6.2 EQ Check-in
 
-**REQ-EQ-01** — Three steps: **Name it → Explore → Suggestions**. *The Explore
-step is missing entirely, and it is the largest single gap in the project.*
+**REQ-EQ-01** — Three steps: **Name it → Explore → Suggestions**. *Done.*
 
 **REQ-EQ-02** — Explore asks 2–3 reflective questions one at a time — "When did
 this start?", "What's underneath this?" — with optional free-text answers,
-stored keyed by question.
+stored keyed by question. *Done — skipping any question is fine, and Back
+returns the previous answer to its box.*
 
 **REQ-EQ-03** — Custom emotions can be typed, not only chosen from the preset
-list.
+list. *Done — a typed emotion with no suggestions of its own falls back to a
+general set rather than being a dead end.*
 
 **REQ-EQ-04** — Suggestions are drawn from the selected emotion; three shown.
+*Done.*
 
 *Why this matters: without Explore, the module is a lookup table. The pause
 between naming a feeling and being handed advice is the part that does the

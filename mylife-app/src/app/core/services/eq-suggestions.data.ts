@@ -35,4 +35,11 @@ export const EQ_SUGGESTIONS: EqSuggestion[] = [
   { id: 'excited-1', emotion: 'excited', activity_text: 'Channel it — start the thing while the energy is high' },
   { id: 'excited-2', emotion: 'excited', activity_text: 'Tell someone who will be excited with you' },
   { id: 'excited-3', emotion: 'excited', activity_text: 'Write down what this feels like, to read on a flat day' },
+
+  // Used when the named emotion has none of its own, which is what happens
+  // whenever a custom emotion is typed. Broad enough to be reasonable without
+  // knowing what the feeling actually is.
+  { id: 'general-1', emotion: 'general', activity_text: 'Name the feeling out loud, once' },
+  { id: 'general-2', emotion: 'general', activity_text: 'Step outside for five minutes' },
+  { id: 'general-3', emotion: 'general', activity_text: 'Drink a glass of water, slowly' },
 ];

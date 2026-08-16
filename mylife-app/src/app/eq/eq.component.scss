@@ -1,8 +1,60 @@
-.suggestions {
+.steps {
   display: flex;
-  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  margin-bottom: 20px;
+}
+
+.steps__item {
+  flex: 1;
+  padding-top: 8px;
+  border-top: 2px solid var(--border);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+
+  &--now {
+    border-top-color: var(--text);
+    color: var(--text);
+  }
+}
+
+.explore__feeling {
+  font-size: 18px;
+  font-weight: 300;
+  margin-bottom: 4px;
+}
+
+.explore__count {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.explore__question {
+  display: block;
+  font-size: 15px;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.explore__answer {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.explore__actions {
+  display: flex;
+  justify-content: space-between;
   gap: 8px;
   margin-bottom: 24px;
+
+  // A lone Done button should sit to the right like the primary action it is.
+  .btn:only-child { margin-left: auto; }
 }
 
 .section-title {

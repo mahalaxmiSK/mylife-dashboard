@@ -39,6 +39,22 @@ export interface EqSuggestion {
   activity_text: string;
 }
 
+/** One reflective question in the Explore step (REQ-EQ-02). */
+export interface ExploreQuestion {
+  id: string;
+  text: string;
+}
+
+/** Explore answers, keyed by the question that prompted them (REQ-EQ-02). */
+export type ExploreAnswers = Record<string, string>;
+
+/**
+ * Shown when the named emotion has no suggestions of its own, which happens
+ * whenever a custom emotion is typed (REQ-EQ-03). Deliberately broad: these
+ * have to be reasonable without knowing what the feeling is.
+ */
+export const GENERAL_EMOTION = 'general';
+
 export interface RoutineTemplate extends BaseRow {
   day_type: 'lazy' | 'reset' | 'creative' | 'focused';
   title: string;

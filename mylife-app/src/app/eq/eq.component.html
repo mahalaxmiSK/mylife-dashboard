@@ -2,25 +2,60 @@
   <a class="page__back" routerLink="/">&larr; back</a>
   <h1 class="page__title">EQ Check-in</h1>
 
-  <span class="label">How are you feeling?</span>
-  <div class="chip-row">
-    <button class="chip" *ngFor="let emotion of emotions"
-            [class.chip--active]="selected === emotion"
-            (click)="select(emotion)">{{ emotion }}</button>
-  </div>
+  <ol class="steps" aria-label="Progress">
+    <li class="steps__item" [class.steps__item--now]="step === 'name'">Name it</li>
+    <li class="steps__item" [class.steps__item--now]="step === 'explore'">Explore</li>
+    <li class="steps__item" [class.steps__item--now]="step === 'suggestions'">Suggestions</li>
+  </ol>
 
-  <ng-container *ngIf="selected">
-    <div class="add-row">
-      <input class="input" [(ngModel)]="note" (keyup.enter)="save()"
-             placeholder="Anything you want to note (optional)" />
-      <button class="btn btn--primary" (click)="save()" [disabled]="saving">Save</button>
+  <!-- Step 1 -->
+  <ng-container *ngIf="step === 'name'">
+    <span class="label">How are you feeling?</span>
+    <div class="chip-row">
+      <button class="chip" *ngFor="let option of emotions"
+              (click)="select(option)">{{ option }}</button>
     </div>
 
-    <div class="suggestions" *ngIf="suggestions.length">
-      <span class="label">Might help</span>
+    <div class="add-row">
+      <label class="visually-hidden" for="custom-emotion">Or name it yourself</label>
+      <input class="input" id="custom-emotion" [(ngModel)]="customEmotion"
+             (keyup.enter)="useCustomEmotion()"
+             placeholder="Or name it yourself..." />
+      <button class="btn btn--ghost" (click)="useCustomEmotion()">Use</button>
+    </div>
+  </ng-container>
+
+  <!-- Step 2 -->
+  <ng-container *ngIf="step === 'explore' && currentQuestion">
+    <p class="explore__feeling">{{ emotion }}</p>
+    <p class="explore__count">Question {{ questionIndex + 1 }} of {{ questions.length }}</p>
+
+    <label class="explore__question" [attr.for]="'answer-' + currentQuestion.id">
+      {{ currentQuestion.text }}
+    </label>
+    <textarea class="input explore__answer" [id]="'answer-' + currentQuestion.id"
+              [(ngModel)]="answer" rows="3"
+              placeholder="If you want to. Skipping is fine."></textarea>
+
+    <div class="explore__actions">
+      <button class="btn btn--ghost" (click)="back()">Back</button>
+      <button class="btn btn--primary" (click)="next()">
+        {{ isLastQuestion ? 'See suggestions' : 'Next' }}
+      </button>
+    </div>
+  </ng-container>
+
+  <!-- Step 3 -->
+  <ng-container *ngIf="step === 'suggestions'">
+    <p class="explore__feeling">{{ emotion }}</p>
+    <span class="label">Might help</span>
+    <div class="list">
       <div class="list-item" *ngFor="let suggestion of suggestions">
         <span class="list-item__text">{{ suggestion.activity_text }}</span>
       </div>
+    </div>
+    <div class="explore__actions">
+      <button class="btn btn--primary" (click)="finish()">Done</button>
     </div>
   </ng-container>
 
@@ -30,7 +65,7 @@
     <div class="list-item" *ngFor="let checkin of history">
       <span class="list-item__text">
         <strong>{{ checkin.emotion }}</strong>
-        <em class="note" *ngIf="noteText(checkin)"> - {{ noteText(checkin) }}</em>
+        <em class="note" *ngIf="summaryOf(checkin)"> - {{ summaryOf(checkin) }}</em>
       </span>
       <span class="stamp">{{ checkin.created_at | date: 'MMM d' }}</span>
     </div>
