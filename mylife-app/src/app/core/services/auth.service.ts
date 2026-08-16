@@ -32,14 +32,35 @@ export class AuthService {
   }
 
   /**
-   * Sends the link. `emailRedirectTo` has to be an allowed URI on the project
-   * or Supabase refuses, which is why localhost is on that list too.
+   * Emails a six-digit code.
+   *
+   * Deliberately not a link. A link only works in the browser that asked for
+   * it, because the PKCE verifier lives in that browser's storage — open it
+   * from a mail app, which has its own in-app browser, and the exchange fails
+   * silently and dumps you back on the login screen. That is exactly what
+   * happened on the first attempt: the account was created and the address
+   * confirmed, but no session ever reached the browser.
+   *
+   * A code is typed into the page that asked for it, so there is nothing to
+   * carry between browsers.
    */
-  sendMagicLink(email: string): Observable<void> {
+  sendCode(email: string): Observable<void> {
     return from(
-      this.supabase.auth.signInWithOtp({
+      this.supabase.auth.signInWithOtp({ email: email.trim().toLowerCase() })
+    ).pipe(
+      map(({ error }) => {
+        if (error) throw error;
+      })
+    );
+  }
+
+  /** Exchanges the code for a session. Resolves once the session is stored. */
+  verifyCode(email: string, code: string): Observable<void> {
+    return from(
+      this.supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
-        options: { emailRedirectTo: window.location.origin + window.location.pathname }
+        token: code.trim(),
+        type: 'email'
       })
     ).pipe(
       map(({ error }) => {

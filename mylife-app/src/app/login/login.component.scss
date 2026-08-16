@@ -50,3 +50,11 @@
   padding: 10px 12px;
   margin-bottom: 16px;
 }
+
+/** Big enough to read back from an email without squinting. */
+.login__code {
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 8px;
+  padding: 12px;
+}

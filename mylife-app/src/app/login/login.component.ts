@@ -1,7 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
+
+type Step = 'email' | 'code';
 
 @Component({
   selector: 'app-login',
@@ -12,6 +15,7 @@ import { AuthService } from '../core/services/auth.service';
 })
 export class LoginComponent {
   private auth = inject(AuthService);
+  private router = inject(Router);
 
   /**
    * The database trigger rejects any address but the owner's, but its own
@@ -23,34 +27,58 @@ export class LoginComponent {
    *
    * Matching on it is therefore a guess, but the right one: a signup that
    * fails inside the database is overwhelmingly this rule, and being told the
-   * address is wrong is more use than being told nothing. A real outage shows
-   * the same line, which is a fair trade for the common case.
+   * address is wrong is more use than being told nothing.
    */
   private static isNotTheOwner(err: unknown): boolean {
     const message = (err as { message?: string })?.message ?? '';
     return /registration is closed|database error saving new user/i.test(message);
   }
 
+  step: Step = 'email';
   email = '';
-  sending = false;
-  sent = false;
+  code = '';
+  busy = false;
   error = '';
 
   send(): void {
     const email = this.email.trim();
-    if (!email || this.sending) return;
+    if (!email || this.busy) return;
 
-    this.sending = true;
+    this.busy = true;
     this.error = '';
 
-    this.auth.sendMagicLink(email).subscribe({
-      next: () => { this.sent = true; this.sending = false; },
+    this.auth.sendCode(email).subscribe({
+      next: () => { this.step = 'code'; this.busy = false; },
       error: err => {
-        this.sending = false;
+        this.busy = false;
         this.error = LoginComponent.isNotTheOwner(err)
           ? 'This dashboard belongs to one person, and that address is not it.'
-          : 'Could not send the link. Check the address and try again.';
+          : 'Could not send the code. Check the address and try again.';
       }
     });
+  }
+
+  verify(): void {
+    const code = this.code.trim();
+    if (!code || this.busy) return;
+
+    this.busy = true;
+    this.error = '';
+
+    this.auth.verifyCode(this.email, code).subscribe({
+      // Navigating only after verifyOtp resolves means the session is already
+      // stored, so the guard on the way in cannot race ahead of it.
+      next: () => this.router.navigateByUrl('/'),
+      error: () => {
+        this.busy = false;
+        this.error = 'That code did not work. It may have expired.';
+      }
+    });
+  }
+
+  startOver(): void {
+    this.step = 'email';
+    this.code = '';
+    this.error = '';
   }
 }

@@ -1,28 +1,46 @@
 <div class="login">
   <h1 class="login__title">MyLife</h1>
 
-  <ng-container *ngIf="!sent">
-    <p class="login__lead">Sign in with a link sent to your email.</p>
+  <ng-container *ngIf="step === 'email'">
+    <p class="login__lead">Sign in with a code sent to your email.</p>
 
     <form class="login__form" (ngSubmit)="send()">
       <label class="visually-hidden" for="login-email">Email address</label>
       <input class="input" id="login-email" type="email" name="email"
              [(ngModel)]="email" autocomplete="email" inputmode="email"
-             placeholder="your@email.com" [disabled]="sending" />
-      <button class="btn btn--primary" type="submit" [disabled]="sending || !email.trim()">
-        {{ sending ? 'Sending...' : 'Send link' }}
+             placeholder="your@email.com" [disabled]="busy" />
+      <button class="btn btn--primary" type="submit" [disabled]="busy || !email.trim()">
+        {{ busy ? 'Sending...' : 'Send code' }}
       </button>
     </form>
 
     <p class="login__error" role="alert" *ngIf="error">{{ error }}</p>
-    <p class="login__note">No password. The link signs you in and lasts an hour.</p>
+    <p class="login__note">
+      No password. The code lasts a day, and once you are in this device stays
+      signed in.
+    </p>
   </ng-container>
 
-  <ng-container *ngIf="sent">
-    <p class="login__sent">Check your email.</p>
+  <ng-container *ngIf="step === 'code'">
+    <p class="login__lead">Check your email for a six-digit code.</p>
+
+    <form class="login__form" (ngSubmit)="verify()">
+      <label class="visually-hidden" for="login-code">Six-digit code</label>
+      <input class="input login__code" id="login-code" name="code"
+             [(ngModel)]="code" inputmode="numeric" autocomplete="one-time-code"
+             maxlength="6" placeholder="000000" [disabled]="busy" />
+      <button class="btn btn--primary" type="submit" [disabled]="busy || !code.trim()">
+        {{ busy ? 'Checking...' : 'Sign in' }}
+      </button>
+    </form>
+
+    <p class="login__error" role="alert" *ngIf="error">{{ error }}</p>
     <p class="login__note">
-      The link opens this dashboard. It works once, and expires after an hour.
+      Type it here rather than following a link, so it works whichever app
+      opened your email. You should only have to do this once on this device.
     </p>
-    <button class="btn btn--ghost" (click)="sent = false">Use a different address</button>
+    <button class="btn btn--ghost" (click)="startOver()" [disabled]="busy">
+      Use a different address
+    </button>
   </ng-container>
 </div>
