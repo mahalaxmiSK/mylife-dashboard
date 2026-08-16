@@ -1,11 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { forkJoin, switchMap } from 'rxjs';
 import { ToastService } from '../core/services/toast.service';
-import { forkJoin } from 'rxjs';
 import { RoutinesService } from '../core/services/routines.service';
-import { RoutineItem, RoutineTemplate, today } from '../core/services/models';
+import { DAY_TYPES, RoutineItem, RoutineTemplate, today } from '../core/services/models';
 
 @Component({
   selector: 'app-routines',
@@ -14,64 +14,51 @@ import { RoutineItem, RoutineTemplate, today } from '../core/services/models';
   templateUrl: './routines.component.html',
   styleUrl: './routines.component.scss'
 })
-export class RoutinesComponent implements OnInit {
+export class RoutinesComponent {
   private service = inject(RoutinesService);
   private toast = inject(ToastService);
 
-  readonly dayTypes: RoutineTemplate['day_type'][] =
-    ['lazy', 'reset', 'creative', 'focused'];
+  readonly dayTypes = DAY_TYPES;
 
-  templates: RoutineTemplate[] = [];
+  /** Nothing is open until a tile is tapped, so no template is created unasked. */
+  activeType: RoutineTemplate['day_type'] | null = null;
   active: RoutineTemplate | null = null;
   items: RoutineItem[] = [];
 
-  newTemplateTitle = '';
-  newTemplateType: RoutineTemplate['day_type'] = 'lazy';
   draftItem = '';
-
-  loading = true;
+  loading = false;
   /** Steps ticked today, loaded alongside the template's steps. */
   checked = new Set<string>();
 
-  ngOnInit(): void {
-    this.service.templates().subscribe({
-      next: templates => {
-        this.templates = templates;
-        this.loading = false;
-        if (templates.length) this.open(templates[0]);
-      },
-      error: () => { this.loading = false; this.toast.show('Could not load your routines'); }
-    });
-  }
-
   /**
-   * Steps and today's ticks are fetched together so the list never renders
-   * briefly unticked before the ticks arrive.
+   * Opens the template for a day type, creating it the first time. Steps and
+   * today's ticks arrive together so the list never renders briefly unticked.
    */
-  open(template: RoutineTemplate): void {
-    this.active = template;
+  selectDay(type: RoutineTemplate['day_type']): void {
+    this.activeType = type;
+    this.active = null;
     this.items = [];
     this.checked.clear();
+    this.loading = true;
 
-    forkJoin({
-      items: this.service.items(template.id),
-      ticked: this.service.tickedOn(today())
-    }).subscribe({
+    this.service.templateFor(type).pipe(
+      switchMap(template => {
+        this.active = template;
+        return forkJoin({
+          items: this.service.items(template.id),
+          ticked: this.service.tickedOn(today())
+        });
+      })
+    ).subscribe({
       next: ({ items, ticked }) => {
         this.checked = new Set(ticked);
         this.items = items;
+        this.loading = false;
       },
-      error: () => this.toast.show('Could not load that routine')
-    });
-  }
-
-  createTemplate(): void {
-    const title = this.newTemplateTitle.trim();
-    if (!title) return;
-    this.newTemplateTitle = '';
-    this.service.createTemplate(this.newTemplateType, title).subscribe(created => {
-      this.templates.push(created);
-      this.open(created);
+      error: () => {
+        this.loading = false;
+        this.toast.show('Could not load that routine');
+      }
     });
   }
 
@@ -79,8 +66,10 @@ export class RoutinesComponent implements OnInit {
     const text = this.draftItem.trim();
     if (!text || !this.active) return;
     this.draftItem = '';
-    this.service.addItem(this.active.id, text, this.items.length)
-      .subscribe(created => this.items.push(created));
+    this.service.addItem(this.active.id, text, this.items.length).subscribe({
+      next: created => this.items.push(created),
+      error: () => this.toast.show('Could not add that step')
+    });
   }
 
   removeItem(item: RoutineItem): void {
@@ -91,6 +80,29 @@ export class RoutinesComponent implements OnInit {
       error: () => {
         this.items.splice(index, 0, item);
         this.toast.show('Could not delete that step');
+      }
+    });
+  }
+
+  /**
+   * Moves a step by one place. Up and down buttons rather than drag: they stay
+   * reachable by keyboard (REQ-NFR-03) and work one-handed (REQ-GEN-04).
+   */
+  move(item: RoutineItem, delta: number): void {
+    const from = this.items.indexOf(item);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= this.items.length) return;
+
+    const previous = this.items;
+    const next = [...this.items];
+    next.splice(from, 1);
+    next.splice(to, 0, item);
+    this.items = next;
+
+    this.service.reorder(next).subscribe({
+      error: () => {
+        this.items = previous;
+        this.toast.show('Could not reorder those steps');
       }
     });
   }

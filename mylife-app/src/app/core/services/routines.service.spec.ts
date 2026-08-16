@@ -65,6 +65,34 @@ describe('RoutinesService', () => {
     expect(await firstValueFrom(service.tickedOn('2026-08-16'))).toEqual([]);
   });
 
+  it('persists a new order for the steps', async () => {
+    const template = await firstValueFrom(service.createTemplate('lazy', 'Slow morning'));
+    const first = await firstValueFrom(service.addItem(template.id, 'Tea', 0));
+    const second = await firstValueFrom(service.addItem(template.id, 'Stretch', 1));
+
+    await firstValueFrom(service.reorder([second, first]));
+
+    const items = await firstValueFrom(service.items(template.id));
+    expect(items.map(i => i.text)).toEqual(['Stretch', 'Tea']);
+  });
+
+  it('opens the existing template for a day type rather than a second one', async () => {
+    const created = await firstValueFrom(service.templateFor('reset'));
+
+    const reopened = await firstValueFrom(service.templateFor('reset'));
+
+    expect(reopened.id).toBe(created.id);
+    expect((await firstValueFrom(service.templates())).length).toBe(1);
+  });
+
+  it('keeps each day type on its own template', async () => {
+    const lazy = await firstValueFrom(service.templateFor('lazy'));
+    const focused = await firstValueFrom(service.templateFor('focused'));
+
+    expect(focused.id).not.toBe(lazy.id);
+    expect(focused.day_type).toBe('focused');
+  });
+
   it('discards the ticks of every step in a deleted template', async () => {
     const { template, step } = await seedStep();
     await firstValueFrom(service.tick(step.id, '2026-08-16'));

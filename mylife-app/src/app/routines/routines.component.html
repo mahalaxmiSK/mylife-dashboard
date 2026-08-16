@@ -1,43 +1,44 @@
 <div class="page">
   <a class="page__back" routerLink="/">&larr; back</a>
   <h1 class="page__title">Routines</h1>
+  <p class="page__hint">What kind of day is it?</p>
+
+  <div class="day-tiles">
+    <button class="day-tile" *ngFor="let day of dayTypes"
+            [class.day-tile--active]="activeType === day.type"
+            [attr.aria-pressed]="activeType === day.type"
+            (click)="selectDay(day.type)">
+      <span class="day-tile__emoji" aria-hidden="true">{{ day.emoji }}</span>
+      <span class="day-tile__label">{{ day.label }}</span>
+    </button>
+  </div>
 
   <p class="loading" *ngIf="loading">Loading...</p>
 
-  <ng-container *ngIf="!loading">
-    <div class="chip-row">
-      <button class="chip" *ngFor="let template of templates"
-              [class.chip--active]="active?.id === template.id"
-              (click)="open(template)">{{ template.title }}</button>
-    </div>
-
+  <ng-container *ngIf="active && !loading">
     <div class="add-row">
-      <select class="input select" [(ngModel)]="newTemplateType">
-        <option *ngFor="let type of dayTypes" [value]="type">{{ type }}</option>
-      </select>
-      <input class="input" [(ngModel)]="newTemplateTitle" (keyup.enter)="createTemplate()"
-             placeholder="New routine name..." />
-      <button class="btn btn--primary" (click)="createTemplate()">Add</button>
+      <label class="visually-hidden" for="new-step">Add a step</label>
+      <input class="input" id="new-step" [(ngModel)]="draftItem" (keyup.enter)="addItem()"
+             placeholder="Add a step..." />
+      <button class="btn btn--ghost" (click)="addItem()" aria-label="Add step">+</button>
     </div>
 
-    <ng-container *ngIf="active">
-      <div class="add-row">
-        <input class="input" [(ngModel)]="draftItem" (keyup.enter)="addItem()"
-               placeholder="Add a step..." />
-        <button class="btn btn--ghost" (click)="addItem()">+</button>
+    <div class="list">
+      <div class="list-item" *ngFor="let item of items; let i = index"
+           [class.list-item--done]="checked.has(item.id)">
+        <input type="checkbox" [id]="'step-' + item.id"
+               [checked]="checked.has(item.id)" (change)="toggle(item)" />
+        <label class="list-item__text" [attr.for]="'step-' + item.id">{{ item.text }}</label>
+        <button class="icon-btn" (click)="move(item, -1)" [disabled]="i === 0"
+                attr.aria-label="Move {{ item.text }} up">&uarr;</button>
+        <button class="icon-btn" (click)="move(item, 1)" [disabled]="i === items.length - 1"
+                attr.aria-label="Move {{ item.text }} down">&darr;</button>
+        <button class="icon-btn" (click)="removeItem(item)"
+                attr.aria-label="Delete {{ item.text }}">&times;</button>
       </div>
-
-      <div class="list">
-        <div class="list-item" *ngFor="let item of items"
-             [class.list-item--done]="checked.has(item.id)">
-          <input type="checkbox" [checked]="checked.has(item.id)" (change)="toggle(item)" />
-          <span class="list-item__text">{{ item.text }}</span>
-          <button class="icon-btn" (click)="removeItem(item)" aria-label="Delete">&times;</button>
-        </div>
-        <p class="empty" *ngIf="!items.length">No steps yet.</p>
-      </div>
-    </ng-container>
-
-    <p class="empty" *ngIf="!templates.length">No routines yet. Create one above.</p>
+      <p class="empty" *ngIf="!items.length">No steps yet. Add the first one above.</p>
+    </div>
   </ng-container>
+
+  <p class="empty" *ngIf="!activeType">Pick a day type to see its routine.</p>
 </div>

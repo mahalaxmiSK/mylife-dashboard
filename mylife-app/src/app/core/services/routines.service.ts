@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { LocalDbService } from './local-db.service';
-import { RoutineItem, RoutineItemLog, RoutineTemplate } from './models';
+import { DAY_TYPE_TITLES, RoutineItem, RoutineItemLog, RoutineTemplate } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class RoutinesService {
@@ -21,6 +21,20 @@ export class RoutinesService {
     });
   }
 
+  /**
+   * The one template for a day type, created on first use. The four day types
+   * are the interface (REQ-ROUT-01), so there is nowhere to put a second
+   * template of the same type and nothing that would open it.
+   */
+  templateFor(dayType: RoutineTemplate['day_type']): Observable<RoutineTemplate> {
+    return this.templates().pipe(
+      switchMap(all => {
+        const existing = all.find(t => t.day_type === dayType);
+        return existing ? of(existing) : this.createTemplate(dayType, DAY_TYPE_TITLES[dayType]);
+      })
+    );
+  }
+
   items(templateId: string): Observable<RoutineItem[]> {
     return this.db.all<RoutineItem>('routines_items').pipe(
       map(rows => rows
@@ -35,6 +49,15 @@ export class RoutinesService {
       text,
       position
     });
+  }
+
+  /** Rewrites positions to match the given order. */
+  reorder(items: RoutineItem[]): Observable<RoutineItem[]> {
+    if (!items.length) return of([]);
+    return forkJoin(
+      items.map((item, index) =>
+        this.db.update<RoutineItem>('routines_items', item.id, { position: index }))
+    );
   }
 
   removeItem(id: string): Observable<void> {

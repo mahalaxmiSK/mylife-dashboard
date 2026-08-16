@@ -44,6 +44,25 @@ export interface RoutineTemplate extends BaseRow {
   title: string;
 }
 
+/** The four day types, in the order they appear as tiles (REQ-ROUT-01). */
+export const DAY_TYPES = [
+  { type: 'lazy', label: 'Lazy', emoji: '😴' },
+  { type: 'reset', label: 'Reset', emoji: '🔄' },
+  { type: 'creative', label: 'Creative', emoji: '🎨' },
+  { type: 'focused', label: 'Focused', emoji: '🎯' }
+] as const satisfies readonly {
+  type: RoutineTemplate['day_type'];
+  label: string;
+  emoji: string;
+}[];
+
+export const DAY_TYPE_TITLES: Record<RoutineTemplate['day_type'], string> = {
+  lazy: 'Lazy day',
+  reset: 'Reset day',
+  creative: 'Creative day',
+  focused: 'Focused day'
+};
+
 export interface RoutineItem extends BaseRow {
   template_id: string;
   text: string;
