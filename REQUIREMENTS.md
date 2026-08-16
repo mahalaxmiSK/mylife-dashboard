@@ -216,11 +216,14 @@ alive when today is not yet ticked but yesterday was. *Done.*
 ### 6.6 Challenges
 
 **REQ-CHAL-01** — The active challenge expands by default showing "Day N of M"
-and today's checklist.
+and today's checklist. *Done.*
 
 **REQ-CHAL-02** — Completed and abandoned challenges collapse to the bottom.
+*Done — behind a collapsed "Finished" disclosure.*
 
-**REQ-CHAL-03** — Missed rules are recorded but never end a challenge.
+**REQ-CHAL-03** — Missed rules are recorded but never end a challenge. *Done —
+a missed day is recorded by the absence of a row, nothing changes status on the
+user's behalf, and a challenge that runs past its last day keeps running.*
 
 ### 6.7 Home
 

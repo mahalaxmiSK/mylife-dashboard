@@ -32,6 +32,23 @@ export class ChallengesComponent implements OnInit {
 
   private loggedToday = new Set<string>();
 
+  /**
+   * REQ-CHAL-02: what is still running, in the order it should be read —
+   * active first, then upcoming.
+   */
+  get liveChallenges(): Challenge[] {
+    const rank = (c: Challenge) => (c.status === 'active' ? 0 : 1);
+    return this.challenges
+      .filter(c => c.status === 'active' || c.status === 'upcoming')
+      .sort((a, b) => rank(a) - rank(b));
+  }
+
+  /** Completed and abandoned, collected at the bottom. */
+  get finishedChallenges(): Challenge[] {
+    return this.challenges.filter(
+      c => c.status === 'completed' || c.status === 'abandoned');
+  }
+
   ngOnInit(): void {
     this.service.list().subscribe({
       next: challenges => {
@@ -114,7 +131,7 @@ export class ChallengesComponent implements OnInit {
     if (wasDone) this.loggedToday.delete(rule.id);
     else this.loggedToday.add(rule.id);
 
-    this.service.toggleRule(rule.id, today()).subscribe({
+    this.service.setRuleLogged(rule.id, today(), !wasDone).subscribe({
       error: () => {
         if (wasDone) this.loggedToday.add(rule.id);
         else this.loggedToday.delete(rule.id);

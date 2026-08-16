@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, switchMap } from 'rxjs';
+import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { LocalDbService } from './local-db.service';
 import { Challenge, ChallengeRule, ChallengeRuleLog } from './models';
 
@@ -64,20 +64,38 @@ export class ChallengesService {
     );
   }
 
-  toggleRule(ruleId: string, loggedDate: string): Observable<{ logged: boolean }> {
-    return this.db.all<ChallengeRuleLog>('challenge_rule_logs').pipe(
-      switchMap(rows => {
-        const existing = rows.find(
-          r => r.rule_id === ruleId && r.logged_date === loggedDate);
+  /**
+   * Keyed by rule and day so marking is one atomic write. The previous
+   * read-then-write pair let two quick taps interleave and lose one.
+   *
+   * Nothing here ever changes a challenge's status: a missed day is recorded
+   * only by the absence of a row, and never ends the challenge (REQ-CHAL-03).
+   */
+  private static logId(ruleId: string, loggedDate: string): string {
+    return `${ruleId}:${loggedDate}`;
+  }
 
-        if (existing) {
-          return this.db.remove('challenge_rule_logs', existing.id).pipe(
-            map(() => ({ logged: false })));
-        }
-        return this.db
-          .insert<ChallengeRuleLog>('challenge_rule_logs',
-            { rule_id: ruleId, logged_date: loggedDate })
-          .pipe(map(() => ({ logged: true })));
+  setRuleLogged(ruleId: string, loggedDate: string, logged: boolean): Observable<void> {
+    const id = ChallengesService.logId(ruleId, loggedDate);
+
+    if (logged) {
+      return this.db.put<ChallengeRuleLog>('challenge_rule_logs', {
+        id,
+        rule_id: ruleId,
+        logged_date: loggedDate,
+        created_at: new Date().toISOString()
+      }).pipe(map(() => undefined));
+    }
+
+    // Rows written before ids were derived still carry a generated one.
+    return this.db.remove('challenge_rule_logs', id).pipe(
+      switchMap(() => this.db.all<ChallengeRuleLog>('challenge_rule_logs')),
+      switchMap(rows => {
+        const strays = rows.filter(
+          r => r.rule_id === ruleId && r.logged_date === loggedDate);
+        if (!strays.length) return of(undefined);
+        return forkJoin(strays.map(r => this.db.remove('challenge_rule_logs', r.id)))
+          .pipe(map(() => undefined));
       })
     );
   }

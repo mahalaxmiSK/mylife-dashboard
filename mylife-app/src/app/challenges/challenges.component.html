@@ -3,18 +3,21 @@
   <h1 class="page__title">Challenges</h1>
 
   <div class="add-row">
-    <input class="input" [(ngModel)]="newName" (keyup.enter)="create()"
+    <label class="visually-hidden" for="new-challenge">New challenge</label>
+    <input class="input" id="new-challenge" [(ngModel)]="newName" (keyup.enter)="create()"
            placeholder="New challenge..." />
-    <input class="input days" type="number" min="1" [(ngModel)]="newDuration"
-           aria-label="Duration in days" />
+    <label class="visually-hidden" for="new-duration">Duration in days</label>
+    <input class="input days" id="new-duration" type="number" min="1"
+           [(ngModel)]="newDuration" />
     <button class="btn btn--primary" (click)="create()">Add</button>
   </div>
 
   <p class="loading" *ngIf="loading">Loading...</p>
 
   <ng-container *ngIf="!loading">
-    <div class="chip-row">
-      <button class="chip" *ngFor="let challenge of challenges"
+    <!-- REQ-CHAL-01: the running challenge is open on arrival. -->
+    <div class="chip-row" *ngIf="liveChallenges.length > 1">
+      <button class="chip" *ngFor="let challenge of liveChallenges"
               [class.chip--active]="active?.id === challenge.id"
               (click)="open(challenge)">{{ challenge.name }}</button>
     </div>
@@ -23,33 +26,52 @@
       <div class="header-card">
         <div class="row">
           <span class="header-card__name">{{ active.name }}</span>
-          <button class="icon-btn" (click)="remove(active)" aria-label="Delete">&times;</button>
+          <button class="icon-btn" (click)="remove(active)"
+                  attr.aria-label="Delete {{ active.name }}">&times;</button>
         </div>
         <span class="label" *ngIf="dayNumber(active) as day">
           Day {{ day }}<ng-container *ngIf="active.duration_days"> of {{ active.duration_days }}</ng-container>
         </span>
-        <select class="input select" [ngModel]="active.status"
+        <label class="visually-hidden" for="challenge-status">Status</label>
+        <select class="input select" id="challenge-status" [ngModel]="active.status"
                 (ngModelChange)="setStatus(active, $event)">
           <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
         </select>
       </div>
 
       <div class="add-row">
-        <input class="input" [(ngModel)]="draftRule" (keyup.enter)="addRule()"
+        <label class="visually-hidden" for="new-rule">Add a rule</label>
+        <input class="input" id="new-rule" [(ngModel)]="draftRule" (keyup.enter)="addRule()"
                placeholder="Add a rule..." />
-        <button class="btn btn--ghost" (click)="addRule()">+</button>
+        <button class="btn btn--ghost" (click)="addRule()" aria-label="Add rule">+</button>
       </div>
 
       <span class="label">Today</span>
       <div class="list">
         <div class="list-item" *ngFor="let rule of rules"
              [class.list-item--done]="isDone(rule.id)">
-          <input type="checkbox" [checked]="isDone(rule.id)" (change)="toggleRule(rule)" />
-          <span class="list-item__text">{{ rule.text }}</span>
+          <input type="checkbox" [id]="'rule-' + rule.id"
+                 [checked]="isDone(rule.id)" (change)="toggleRule(rule)" />
+          <label class="list-item__text" [attr.for]="'rule-' + rule.id">{{ rule.text }}</label>
         </div>
         <p class="empty" *ngIf="!rules.length">No rules yet.</p>
       </div>
     </ng-container>
+
+    <!-- REQ-CHAL-02: finished ones sit at the bottom, out of the way. -->
+    <details class="finished" *ngIf="finishedChallenges.length">
+      <summary class="finished__summary">
+        Finished ({{ finishedChallenges.length }})
+      </summary>
+      <div class="list">
+        <div class="list-item" *ngFor="let challenge of finishedChallenges">
+          <span class="list-item__text">{{ challenge.name }}</span>
+          <span class="finished__status">{{ challenge.status }}</span>
+          <button class="icon-btn" (click)="open(challenge)"
+                  attr.aria-label="Open {{ challenge.name }}">&rsaquo;</button>
+        </div>
+      </div>
+    </details>
 
     <p class="empty" *ngIf="!challenges.length">No challenges yet.</p>
   </ng-container>
