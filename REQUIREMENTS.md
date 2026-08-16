@@ -228,10 +228,13 @@ user's behalf, and a challenge that runs past its last day keeps running.*
 ### 6.7 Home
 
 **REQ-HOME-01** — Use the emoji icons from the original design, not abstract
-glyphs.
+glyphs. *Done — Habits takes a seedling rather than the usual flame, since a
+streak counter is already enough pressure (REQ-GEN-05).*
 
 **REQ-HOME-02** — Card subtitles must describe what the module actually does.
-*Feel Alive currently promises a wheel that does not exist.*
+*Done — the EQ card said "Name it · Explore · Act" when there was neither an
+Explore step nor an Act step. Both now match what the modules do, and Feel
+Alive can honestly mention the wheel because it exists.*
 
 ---
 
@@ -324,7 +327,7 @@ not UTC.
 | BUG-05 | Error toasts existed but were never triggered | fixed |
 | BUG-06 | Dead `api.service.ts` / `auth.service.ts` left in the repo after a zip-over-extract | fixed |
 | BUG-07 | Routine ticks lost on reload | fixed |
-| BUG-08 | Home advertises a spin wheel that does not exist | open — REQ-HOME-02 |
+| BUG-08 | Home advertises a spin wheel that does not exist | fixed — the wheel now exists |
 
 ---
 

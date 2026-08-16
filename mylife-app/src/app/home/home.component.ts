@@ -25,13 +25,22 @@ export class HomeComponent {
   today = new Date();
   busy = false;
 
+  /**
+   * REQ-HOME-01 asks for emoji rather than abstract glyphs, and REQ-HOME-02 for
+   * subtitles that describe what each module actually does. A card that
+   * promises a step or a feature the module lacks is the defect being fixed
+   * here, so these are written against the built behaviour, not the ambition.
+   *
+   * Habits gets a seedling rather than the usual flame: a streak counter is
+   * already quite enough pressure, and REQ-GEN-05 rules out the rest.
+   */
   cards: WorkspaceCard[] = [
-    { route: '/routines',   icon: '☀',  title: 'Day Routines',  subtitle: 'Lazy · Reset · Creative · Focused' },
-    { route: '/eq',         icon: '❋',  title: 'EQ Check-in',   subtitle: 'Name it · Explore · Act' },
-    { route: '/feel-alive', icon: '✦',  title: 'Feel Alive',    subtitle: 'Things that light you up' },
-    { route: '/tech-reads', icon: '◈',  title: 'Tech Reads',    subtitle: 'Learn · Track progress' },
-    { route: '/habits',     icon: '◉',  title: 'Habits',        subtitle: 'Daily streaks' },
-    { route: '/challenges', icon: '⚑',  title: 'Challenges',    subtitle: 'Commit · Track · Finish' }
+    { route: '/routines',   icon: '🌤️', title: 'Day Routines',  subtitle: 'Lazy · Reset · Creative · Focused' },
+    { route: '/eq',         icon: '💭', title: 'EQ Check-in',   subtitle: 'Name it · Explore · Suggestions' },
+    { route: '/feel-alive', icon: '✨', title: 'Feel Alive',    subtitle: 'Spin the wheel, or just pick one' },
+    { route: '/tech-reads', icon: '📚', title: 'Tech Reads',    subtitle: 'Track what you are learning' },
+    { route: '/habits',     icon: '🌱', title: 'Habits',        subtitle: "Today's list, and your streaks" },
+    { route: '/challenges', icon: '🏔️', title: 'Challenges',    subtitle: 'Daily rules, day by day' }
   ];
 
   get greeting(): string {
