@@ -13,6 +13,12 @@ export const routes: Routes = [
     loadComponent: () => import('./home/home.component').then(m => m.HomeComponent)
   },
   {
+    path: 'passphrase',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./settings/passphrase.component').then(m => m.PassphraseComponent)
+  },
+  {
     path: 'routines',
     canActivate: [authGuard],
     loadComponent: () => import('./routines/routines.component').then(m => m.RoutinesComponent)

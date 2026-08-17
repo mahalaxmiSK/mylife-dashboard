@@ -1,0 +1,41 @@
+<div class="page">
+  <a class="page__back" routerLink="/">&larr; back</a>
+  <h1 class="page__title">Change passphrase</h1>
+
+  <p class="passphrase__lead">
+    Pick something only you know. Four ordinary words are ideal — easy to
+    remember, and far beyond guessing.
+  </p>
+
+  <form class="passphrase__form" (ngSubmit)="save()">
+    <label class="label" for="new-passphrase">New passphrase</label>
+    <input class="input" id="new-passphrase" type="password" name="passphrase"
+           [(ngModel)]="passphrase" autocomplete="new-password"
+           autocapitalize="none" autocorrect="off" spellcheck="false"
+           placeholder="copper lantern drift almond" [disabled]="busy" />
+    <p class="passphrase__hint" [class.passphrase__hint--warn]="tooShort">
+      At least {{ minimum }} characters. Four words gets you there without
+      trying.
+    </p>
+
+    <label class="label" for="confirm-passphrase">Type it again</label>
+    <input class="input" id="confirm-passphrase" type="password" name="confirmation"
+           [(ngModel)]="confirmation" autocomplete="new-password"
+           autocapitalize="none" autocorrect="off" spellcheck="false"
+           [disabled]="busy" />
+    <p class="passphrase__hint passphrase__hint--warn" *ngIf="mismatch">
+      These two do not match.
+    </p>
+
+    <button class="btn btn--primary" type="submit" [disabled]="!canSubmit">
+      {{ busy ? 'Saving...' : 'Change it' }}
+    </button>
+  </form>
+
+  <p class="passphrase__error" role="alert" *ngIf="error">{{ error }}</p>
+
+  <p class="passphrase__note">
+    Devices already signed in stay signed in — changing this does not sign them
+    out. It is the passphrase for signing in somewhere new.
+  </p>
+</div>
