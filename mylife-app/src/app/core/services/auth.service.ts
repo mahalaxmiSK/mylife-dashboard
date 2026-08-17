@@ -32,7 +32,8 @@ export class AuthService {
   }
 
   /**
-   * Emails a six-digit code.
+   * Emails a numeric code. Its length is a setting on the auth project, not
+   * something to assume here — see the note on the input in the login screen.
    *
    * Deliberately not a link. A link only works in the browser that asked for
    * it, because the PKCE verifier lives in that browser's storage — open it

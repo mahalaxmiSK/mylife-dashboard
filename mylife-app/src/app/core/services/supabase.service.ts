@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 /**
  * The one Supabase client for the app.
  *
- * Sign-in is a six-digit code typed into the page, never a link, so the client
+ * Sign-in is a numeric code typed into the page, never a link, so the client
  * never has to read a session back out of a URL. That makes both of the usual
  * traps irrelevant:
  *
