@@ -1,53 +1,24 @@
 <div class="login">
   <h1 class="login__title">MyLife</h1>
+  <p class="login__lead">Type your passphrase.</p>
 
-  <ng-container *ngIf="step === 'email'">
-    <p class="login__lead">Sign in with a code sent to your email.</p>
-
-    <form class="login__form" (ngSubmit)="send()">
-      <label class="visually-hidden" for="login-email">Email address</label>
-      <input class="input" id="login-email" type="email" name="email"
-             [(ngModel)]="email" autocomplete="email" inputmode="email"
-             placeholder="your@email.com" [disabled]="busy" />
-      <button class="btn btn--primary" type="submit" [disabled]="busy || !email.trim()">
-        {{ busy ? 'Sending...' : 'Send code' }}
-      </button>
-    </form>
-
-    <p class="login__error" role="alert" *ngIf="error">{{ error }}</p>
-    <p class="login__note">
-      No password. The code lasts a day, and once you are in this device stays
-      signed in.
-    </p>
-  </ng-container>
-
-  <ng-container *ngIf="step === 'code'">
-    <p class="login__lead">Check your email for the code.</p>
-
-    <form class="login__form" (ngSubmit)="verify()">
-      <label class="visually-hidden" for="login-code">Sign-in code</label>
-      <!--
-        No maxlength. The code's length is a project setting on the auth
-        provider, so pinning a number here is one place for the two to drift
-        apart — which is exactly what happened: the setting says eight digits
-        and this field silently truncated to six, so a correct code could never
-        be entered.
-      -->
-      <input class="input login__code" id="login-code" name="code"
-             [(ngModel)]="code" inputmode="numeric" autocomplete="one-time-code"
-             placeholder="code from your email" [disabled]="busy" />
-      <button class="btn btn--primary" type="submit" [disabled]="busy || !code.trim()">
-        {{ busy ? 'Checking...' : 'Sign in' }}
-      </button>
-    </form>
-
-    <p class="login__error" role="alert" *ngIf="error">{{ error }}</p>
-    <p class="login__note">
-      Type it here rather than following a link, so it works whichever app
-      opened your email. You should only have to do this once on this device.
-    </p>
-    <button class="btn btn--ghost" (click)="startOver()" [disabled]="busy">
-      Use a different address
+  <form class="login__form" (ngSubmit)="signIn()">
+    <label class="visually-hidden" for="login-passphrase">Passphrase</label>
+    <input class="input login__passphrase" id="login-passphrase" type="password"
+           name="passphrase" [(ngModel)]="passphrase"
+           autocomplete="current-password" autocapitalize="none"
+           autocorrect="off" spellcheck="false"
+           placeholder="four words" [disabled]="busy" />
+    <button class="btn btn--primary" type="submit"
+            [disabled]="busy || !passphrase.trim()">
+      {{ busy ? 'Signing in...' : 'Sign in' }}
     </button>
-  </ng-container>
+  </form>
+
+  <p class="login__error" role="alert" *ngIf="error">{{ error }}</p>
+
+  <p class="login__note">
+    No email, no code to wait for. Once you are in, this device stays signed in
+    and you will not be asked again.
+  </p>
 </div>

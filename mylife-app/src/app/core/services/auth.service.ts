@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, from, map, shareReplay, switchMap } from 'rxjs';
 import { Session, User } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * Magic-link sign-in. No password exists for this account, so there is none to
@@ -32,22 +33,25 @@ export class AuthService {
   }
 
   /**
-   * Emails a numeric code. Its length is a setting on the auth project, not
-   * something to assume here — see the note on the input in the login screen.
+   * Signs in with the typed passphrase. No email is sent, so nothing here can
+   * be rate-limited, land in the wrong app, or arrive too late.
    *
-   * Deliberately not a link. A link only works in the browser that asked for
-   * it, because the PKCE verifier lives in that browser's storage — open it
-   * from a mail app, which has its own in-app browser, and the exchange fails
-   * silently and dumps you back on the login screen. That is exactly what
-   * happened on the first attempt: the account was created and the address
-   * confirmed, but no session ever reached the browser.
+   * The passphrase IS the account's Supabase password, not something compared
+   * in the browser. That distinction is the whole design: a check in the app
+   * could not produce a session, and without a session row-level security
+   * returns nothing, on every device. Loosening that to let the public key
+   * read the tables would publish the data to anyone who opens devtools.
    *
-   * A code is typed into the page that asked for it, so there is nothing to
-   * carry between browsers.
+   * Both previous attempts failed on email delivery — a magic link that could
+   * only complete in the browser that requested it, then a code the built-in
+   * mailer would only send twice an hour. This has no delivery step at all.
    */
-  sendCode(email: string): Observable<void> {
+  signIn(passphrase: string): Observable<void> {
     return from(
-      this.supabase.auth.signInWithOtp({ email: email.trim().toLowerCase() })
+      this.supabase.auth.signInWithPassword({
+        email: environment.ownerEmail,
+        password: passphrase
+      })
     ).pipe(
       map(({ error }) => {
         if (error) throw error;
@@ -55,15 +59,16 @@ export class AuthService {
     );
   }
 
-  /** Exchanges the code for a session. Resolves once the session is stored. */
-  verifyCode(email: string, code: string): Observable<void> {
-    return from(
-      this.supabase.auth.verifyOtp({
-        email: email.trim().toLowerCase(),
-        token: code.trim(),
-        type: 'email'
-      })
-    ).pipe(
+  /**
+   * Changes the passphrase from inside the app, so a new one never has to be
+   * sent to anyone or typed into a chat window to be set up.
+   *
+   * Note what this does NOT do: existing sessions on other devices stay valid,
+   * because changing a password does not revoke refresh tokens. If the point
+   * is to lock someone out, the sessions have to be deleted as well.
+   */
+  changePassphrase(passphrase: string): Observable<void> {
+    return from(this.supabase.auth.updateUser({ password: passphrase })).pipe(
       map(({ error }) => {
         if (error) throw error;
       })

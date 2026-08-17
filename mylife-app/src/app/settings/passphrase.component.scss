@@ -1,0 +1,41 @@
+.passphrase__lead {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.passphrase__form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .label { margin-top: 8px; }
+  .btn { justify-content: center; margin-top: 16px; }
+}
+
+.passphrase__hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+
+  /** Muted rather than red: this is guidance, not a telling-off. */
+  &--warn { color: var(--text); }
+}
+
+.passphrase__error {
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-top: 16px;
+}
+
+.passphrase__note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-top: 28px;
+}
